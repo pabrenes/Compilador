@@ -1,6 +1,7 @@
 
 #include <stack>
 #include "lexer/lexer.h"
+#include "gramaticas/familiasTerminales.h"
 #include "gramaticas/Gramatica.h"
 #include "gramaticas/GTablaFollows.h"
 #include "gramaticas/nombresTerminales.h"
@@ -14,6 +15,8 @@ const int posicionNombreArchivo = 1;
 bool banderaErrorSintactico = false;
 bool banderaErrorSemantico = false;
 
+int nivelActual;
+bool izquierdoEsHoja;
 
 int main(int argc, char *argv[]) {
 
@@ -92,7 +95,26 @@ int main(int argc, char *argv[]) {
 
         } else { //simbolo semantico
             switch (EAP) {
-
+                case GenerarExpresion: //Inicio de una expresion
+                    nivelActual = INT32_MAX;
+                    break;
+                case GenerarNivel4: //Nivel de las adiciones
+                    if (TA->codigoFamilia == NIVEL4_OPERADOR_SUMA ||
+                        TA->codigoFamilia == NIVEL4_OPERADOR_RESTA ||
+                        TA->codigoFamilia == NIVEL4_OPERADOR_FENAT ||
+                        TA->codigoFamilia == NIVEL4_OPERADOR_EJERVALAT) {
+                    }
+                    break;
+                case GenerarNivel3: //Nivel de las multiplicaciones
+                    if (TA->codigoFamilia == NIVEL5_OPERADOR_MULTIPLICACION ||
+                        TA->codigoFamilia == NIVEL5_OPERADOR_DIVISION ||
+                        TA->codigoFamilia == NIVEL5_OPERADOR_MODULO ||
+                        TA->codigoFamilia == NIVEL5_OPERADOR_ANAQUISAN ||
+                        TA->codigoFamilia == NIVEL5_OPERADOR_GOVAT) {
+                    }
+                    break;
+                case ExpresionPrimaria: //Apareció una primaria
+                    break;
             }
         }
     }
