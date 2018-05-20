@@ -19,6 +19,8 @@ bool esFollow(int i, int j);
 
 string demeIdentificadorRegistro();
 
+string mapearTipo(int familiaTipo);
+
 unsigned int registrosTemporales = 0;
 
 const int posicionNombreArchivo = 1;
@@ -130,9 +132,35 @@ int main(int argc, char *argv[]) {
 
         } else { //simbolo semantico
             switch (EAP) {
-                case ValidarExistenciaIdentificador:
-                    if (tablaTipos->buscar(TA->lexema)) { //todo buscar en los demas
+                case ValidarExistenciaIdentificadorConstante: {
+                    if (tablaVariables->buscar(TA->lexema)) {
+                        cout << "duplicao perro" << endl; //todo
+                        bloquearIdentificador = true;
+                    } else
+                        bloquearIdentificador = false;
+                    break;
+                }
+                case PrepararSimboloConstante: {
+                    identificadorActual = TA->lexema;
+                    break;
+                }
+                case ActualizarSimboloConstante: {
+                    if (!bloquearIdentificador) {
+                        if (LITERAL_ENTERA <= TA->codigoFamilia && TA->codigoFamilia <= LITERAL_CONJUNTO_ABRIR ||
+                            TA->codigoFamilia == LITERAL_FRACCION) {
+                            tablaVariables->insertar(
+                                    new SimboloVariable(identificadorActual, mapearTipo(TA->codigoFamilia),
+                                                        TIPO_CLASE_CONSTANTE));
+                        }
+                    }
+                    break;
+                }
+                case ValidarExistenciaIdentificadorTipo:
+                    if (tablaTipos->buscar(TA->lexema)) {
                         cout << "Duplicado perro" << endl; //todo
+                        bloquearIdentificador = true;
+                    } else if (tablaVariables->buscar(TA->lexema)) {
+                        cout << "fue previamente como constante perro" << endl; //todo
                         bloquearIdentificador = true;
                     } else
                         bloquearIdentificador = false;
@@ -528,4 +556,11 @@ bool esFollow(int i, int j) {
 string demeIdentificadorRegistro() {
     string code = to_string(registrosTemporales++);
     return "RT_" + code;
+}
+
+string mapearTipo(int familiaTipo) {
+    if (familiaTipo == LITERAL_FRACCION)
+        return TIPO_FRACCION;
+    string map[] = {"", TIPO_ENTERO, TIPO_CARACTER, TIPO_STRING, TIPO_BOOLEAN, TIPO_BOOLEAN, TIPO_CONJUNTO};
+    return map[familiaTipo];
 }

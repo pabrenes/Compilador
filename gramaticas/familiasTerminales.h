@@ -11,12 +11,12 @@
 #define LITERAL_STRING 3
 #define LITERAL_VERDADERO 4
 #define LITERAL_FALSO 5
+#define LITERAL_CONJUNTO_ABRIR 6
+#define LITERAL_CONJUNTO_CERRAR 7
+#define LITERAL_REGISTRO_ABRIR 8
+#define LITERAL_REGISTRO_CERRAR 9
+#define TERMINADOR 10
 /*
-#define 6
-#define 7
-#define 8
-#define 9
-#define 10
 #define 11
 #define 12
 #define 13
@@ -135,6 +135,6 @@
 #define 114
 #define 115
 #define 116
-#define 117
 */
+#define LITERAL_FRACCION 117
 #endif //COMPILADOR_FAMILIASTERMINALES_H
