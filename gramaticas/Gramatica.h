@@ -1,7 +1,7 @@
 /*
  * Gramatica.h
  *
- * 2018/05/19 21:53:11
+ * 2018/05/19 22:59:39
  *
  * Archivo generado por GikGram 2.0
  *
@@ -47,7 +47,10 @@
 	#define CerrarExpresionParentesis 263
 	#define CerrarRegistroPadre 264
 	#define CrearCampoRegistro 265
-	#define AgregarIdentificadorEnLista 266
+	#define AbrirLiteralArreglo 266
+	#define CerrarLiteralArreglo 267
+	#define AgregarLiteralArreglo 268
+	#define AgregarIdentificadorEnLista 269
 
 	/* Prototipos de las tablas */
 	extern const int TablaParsing[121][NO_TERMINAL_INICIAL];

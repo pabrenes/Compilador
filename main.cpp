@@ -12,6 +12,7 @@
 #include "semantico/expresiones/Expresion.h"
 #include "semantico/simbolos/tipos/TablaSimbolosTipos.h"
 #include "semantico/simbolos/variables/TablaSimbolosVariables.h"
+#include "semantico/literales/LiteralArreglo.h"
 
 using namespace std;
 
@@ -55,6 +56,8 @@ int main(int argc, char *argv[]) {
     // Construye una tabla hash para almacenar declaraciones de variables y constantes
     TablaSimbolosVariables *tablaVariables = new TablaSimbolosVariables(2048);
 
+    // Pila de literales para crear literales de arreglos complejas
+    stack<LiteralArreglo *> pilaLiteralesArreglo;
     // Pila de tablas de símbolos para almacenar elementos en los registros
     stack<vector<SimboloTipoRegistro *> *> pilaRegistros;
     // Pila de árboles de expresiones para manipular expresiones encontradas, es una pila para manipular los paréntesis
@@ -105,7 +108,6 @@ int main(int argc, char *argv[]) {
 
                 } while (TA->codigoFamilia != MARCA_DERECHA && bandera);
             }
-
         } else if (NO_TERMINAL(EAP)) {
             regla = TablaParsing[EAP - NO_TERMINAL_INICIAL][TA->codigoFamilia];
             if (regla < 0) {
@@ -170,7 +172,7 @@ int main(int argc, char *argv[]) {
                 case PrepararSimboloTipo:
                     identificadorActual = TA->lexema;
                     break;
-                case ActualizarSimboloTipo:
+                case ActualizarSimboloTipo: {
                     if (!bloquearIdentificador) {
                         SimboloTipo *tipoTemporal = tablaTipos->buscar(TA->lexema);
                         if (YOROSOR <= TA->codigoFamilia && TA->codigoFamilia <= RISSAT) {
@@ -224,6 +226,272 @@ int main(int argc, char *argv[]) {
                         }
                     }
                     break;
+                }
+                case LimpiarColaIdentificadores: {
+                    colaIdentificadores.clear();
+                    break;
+                }
+                case ValidarIdentificadoresDuplicados: {
+                    vector<token *> colaIdentificadoresTemporal;
+                    for (int i = 0; i < colaIdentificadores.size(); i++) {
+                        if (tablaTipos->buscar(colaIdentificadores.at(i)->lexema)) {
+                            cout << "fue previamente declarao como tipo blabla" << endl; //todo
+                            break;
+                        } else if (tablaVariables->buscar(colaIdentificadores.at(i)->lexema)) {
+                            //if tipo variable
+                            cout << "fue previamente declarao como variable" << endl; //todo
+                            //if tipo constante
+                            cout << "fue previamente declarao como constante" << endl; //todo
+                            break;
+                        }
+                        colaIdentificadoresTemporal.push_back(colaIdentificadores.at(i));
+                    }
+                    colaIdentificadores = colaIdentificadoresTemporal;
+                    break;
+                }
+                case DeclararVariables: {
+                    if (YOROSOR <= TA->codigoFamilia && TA->codigoFamilia <= RISSAT ||
+                        TA->codigoFamilia == IDENTIFICADOR) {
+                        // Busco el tipo en la tabla de símbolos
+                        SimboloTipo *tipoTemporal = tablaTipos->buscar(TA->lexema);
+                        // Como era base, sé que puedo hacerle un cast
+                        if (tipoTemporal) {
+                            SimboloTipoSimple *tipoAtomico = static_cast<SimboloTipoSimple *>(tipoTemporal);
+                            string tipo = tipoAtomico->tipoBase;
+                            for (auto identificador : colaIdentificadores) {
+                                tablaVariables->insertar(
+                                        new SimboloVariable(identificador->lexema, tipo, TIPO_CLASE_VARIABLE));
+                            }
+                        } else {
+                            cout << "esa verga no estaba declarada perro" << endl; //todo
+                        }
+                    } else if (MARILAT == TA->codigoFamilia) {
+                        // Si se declara un registro donde van las variables
+                        // Limpio la pila que acumula registros
+                        while (!pilaRegistros.empty()) {
+                            pilaRegistros.pop();
+                        }
+                        string identificadorRegistroGenerado = demeIdentificadorRegistro();
+                        SimboloTipoRegistro *tipoRegistro = new SimboloTipoRegistro(identificadorRegistroGenerado);
+                        vector<SimboloTipoRegistro *> *nuevoVector = new vector<SimboloTipoRegistro *>();
+                        nuevoVector->push_back(tipoRegistro);
+                        pilaRegistros.push(nuevoVector);
+                        for (auto identificador : colaIdentificadores) {
+                            tablaVariables->insertar(
+                                    new SimboloVariable(identificador->lexema, identificadorRegistroGenerado,
+                                                        TIPO_CLASE_VARIABLE));
+                        }
+                    } else if (KHALASSAR == TA->codigoFamilia) {
+
+                    }
+                    break;
+                }
+                case RevisarIdTipoDefinido: {
+                    if (TA->codigoFamilia == IDENTIFICADOR) {
+                        if (!colaIdentificadores.empty()) {
+                            TTemp = colaIdentificadores.front();
+                            SimboloVariable *sv = tablaVariables->buscar(TTemp->lexema);
+                            SimboloTipo *st = tablaTipos->buscar(sv->tipo);
+                            SimboloVariable *simboloVariable = tablaVariables->buscar(TA->lexema);
+                            if (st->soyAtomico()) {
+                                SimboloTipoSimple *simboloTipoSimple = static_cast<SimboloTipoSimple *> (st);
+                                if (simboloTipoSimple->tipoBase != simboloVariable->tipo) {
+                                    cout << "Se debe inicializar con literal o constante "
+                                         << simboloTipoSimple->tipoBase
+                                         << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
+                                         << " columnaFin: "
+                                         << TA->columnaFin << '\n';
+                                }
+                            }
+                            break;
+                        }
+                    } else {
+                        if (!colaIdentificadores.empty()) {
+                            TTemp = colaIdentificadores.front();
+                            SimboloVariable *sv = tablaVariables->buscar(TTemp->lexema);
+                            SimboloTipo *st = tablaTipos->buscar(sv->tipo);
+                            if (st->soyAtomico()) {
+                                SimboloTipoSimple *simboloTipoSimple = static_cast<SimboloTipoSimple *> (st);
+                                if (simboloTipoSimple->tipoBase != mapearTipo(TA->codigoFamilia)) {
+                                    cout << "Se debe inicializar con literal o constante "
+                                         << simboloTipoSimple->tipoBase
+                                         << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
+                                         << " columnaFin: "
+                                         << TA->columnaFin << '\n';
+                                }
+                            }
+                            break;
+                        }
+                    }
+                    break;
+                }
+                case RevisarIdEntero: {
+                    if (TA->codigoFamilia == IDENTIFICADOR) {
+                        SimboloVariable *sv = tablaVariables->buscar(TA->lexema);
+                        if (sv) {
+                            if (sv->tipoClase != TIPO_CLASE_CONSTANTE) {
+                                cout << "Solo se puede inicializar con constantes o literales "
+                                     << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
+                                     << " columnaFin: "
+                                     << TA->columnaFin << '\n';
+                                break;
+                            }
+                            if (sv->tipo != TIPO_ENTERO) {
+                                cout << "Se debe inicializar con literal o constante yorosor "
+                                     << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
+                                     << " columnaFin: "
+                                     << TA->columnaFin << '\n';
+                                break;
+                            }
+                        } else {
+                            cout << "Constante no declarada "
+                                 << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
+                                 << " columnaFin: "
+                                 << TA->columnaFin << '\n';
+                            break;
+                        }
+                    }
+                    break;
+                }
+                case RevisarIdCaracter: {
+                    if (TA->codigoFamilia == IDENTIFICADOR) {
+                        SimboloVariable *sv = tablaVariables->buscar(TA->lexema);
+                        if (sv) {
+                            if (sv->tipoClase != TIPO_CLASE_CONSTANTE) {
+                                cout << "Solo se puede inicializar con constantes o literales "
+                                     << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
+                                     << " columnaFin: "
+                                     << TA->columnaFin << '\n';
+                                break;
+                            }
+                            if (sv->tipo != TIPO_CARACTER) {
+                                cout << "Se debe inicializar con literal o constante lirikh "
+                                     << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
+                                     << " columnaFin: "
+                                     << TA->columnaFin << '\n';
+                                break;
+                            }
+                        } else {
+                            cout << "Constante no declarada "
+                                 << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
+                                 << " columnaFin: "
+                                 << TA->columnaFin << '\n';
+                            break;
+                        }
+                    }
+                    break;
+                }
+                case RevisarIdString: {
+                    if (TA->codigoFamilia == IDENTIFICADOR) {
+                        SimboloVariable *sv = tablaVariables->buscar(TA->lexema);
+                        if (sv) {
+                            if (sv->tipoClase != TIPO_CLASE_CONSTANTE) {
+                                cout << "Solo se puede inicializar con constantes o literales "
+                                     << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
+                                     << " columnaFin: "
+                                     << TA->columnaFin << '\n';
+                                break;
+                            }
+                            if (sv->tipo != TIPO_STRING) {
+                                cout << "Se debe inicializar con literal o constante laqat "
+                                     << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
+                                     << " columnaFin: "
+                                     << TA->columnaFin << '\n';
+                                break;
+                            }
+                        } else {
+                            cout << "Constante no declarada "
+                                 << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
+                                 << " columnaFin: "
+                                 << TA->columnaFin << '\n';
+                            break;
+                        }
+                    }
+                    break;
+                }
+                case RevisarIdBoolean: {
+                    if (TA->codigoFamilia == IDENTIFICADOR) {
+                        SimboloVariable *sv = tablaVariables->buscar(TA->lexema);
+                        if (sv) {
+                            if (sv->tipoClase != TIPO_CLASE_CONSTANTE) {
+                                cout << "Solo se puede inicializar con constantes o literales "
+                                     << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
+                                     << " columnaFin: "
+                                     << TA->columnaFin << '\n';
+                                break;
+                            }
+                            if (sv->tipo != TIPO_BOOLEAN) {
+                                cout << "Se debe inicializar con literal o constante akat "
+                                     << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
+                                     << " columnaFin: "
+                                     << TA->columnaFin << '\n';
+                                break;
+                            }
+                        } else {
+                            cout << "Constante no declarada "
+                                 << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
+                                 << " columnaFin: "
+                                 << TA->columnaFin << '\n';
+                            break;
+                        }
+                    }
+                }
+                case RevisarIdConjunto: {
+                    if (TA->codigoFamilia == IDENTIFICADOR) {
+                        SimboloVariable *sv = tablaVariables->buscar(TA->lexema);
+                        if (sv) {
+                            if (sv->tipoClase != TIPO_CLASE_CONSTANTE) {
+                                cout << "Solo se puede inicializar con constantes o literales "
+                                     << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
+                                     << " columnaFin: "
+                                     << TA->columnaFin << '\n';
+                                break;
+                            }
+                            if (sv->tipo != TIPO_CONJUNTO) {
+                                cout << "Se debe inicializar con literal o constante yanqokh "
+                                     << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
+                                     << " columnaFin: "
+                                     << TA->columnaFin << '\n';
+                                break;
+                            }
+                        } else {
+                            cout << "Constante no declarada "
+                                 << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
+                                 << " columnaFin: "
+                                 << TA->columnaFin << '\n';
+                            break;
+                        }
+                    }
+                    break;
+                }
+                case RevisarIdFraccion: {
+                    if (TA->codigoFamilia == IDENTIFICADOR) {
+                        SimboloVariable *sv = tablaVariables->buscar(TA->lexema);
+                        if (sv) {
+                            if (sv->tipoClase != TIPO_CLASE_CONSTANTE) {
+                                cout << "Solo se puede inicializar con constantes o literales "
+                                     << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
+                                     << " columnaFin: "
+                                     << TA->columnaFin << '\n';
+                                break;
+                            }
+                            if (sv->tipo != TIPO_FRACCION) {
+                                cout << "Se debe inicializar con literal o constante rissat "
+                                     << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
+                                     << " columnaFin: "
+                                     << TA->columnaFin << '\n';
+                                break;
+                            }
+                        } else {
+                            cout << "Constante no declarada "
+                                 << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
+                                 << " columnaFin: "
+                                 << TA->columnaFin << '\n';
+                            break;
+                        }
+                    }
+                    break;
+                }
                 case GenerarExpresionInstruccion: //Inicio de una expresion
                     pilaArbolesExpresiones.push(new arbolExpresion());
                     break;
@@ -319,65 +587,6 @@ int main(int argc, char *argv[]) {
                     }
                     break;
                 }
-                case LimpiarColaIdentificadores: {
-                    colaIdentificadores.clear();
-                    break;
-                }
-                case ValidarIdentificadoresDuplicados: {
-                    vector<token *> colaIdentificadoresTemporal;
-                    for (int i = 0; i < colaIdentificadores.size(); i++) {
-                        if (tablaTipos->buscar(colaIdentificadores.at(i)->lexema)) {
-                            cout << "fue previamente declarao como tipo blabla" << endl; //todo
-                            break;
-                        } else if (tablaVariables->buscar(colaIdentificadores.at(i)->lexema)) {
-                            //if tipo variable
-                            cout << "fue previamente declarao como variable" << endl; //todo
-                            //if tipo constante
-                            cout << "fue previamente declarao como constante" << endl; //todo
-                            break;
-                        }
-                        colaIdentificadoresTemporal.push_back(colaIdentificadores.at(i));
-                    }
-                    colaIdentificadores = colaIdentificadoresTemporal;
-                    break;
-                }
-                case DeclararVariables: {
-                    if (YOROSOR <= TA->codigoFamilia && TA->codigoFamilia <= RISSAT ||
-                        TA->codigoFamilia == IDENTIFICADOR) {
-                        // Busco el tipo en la tabla de símbolos
-                        SimboloTipo *tipoTemporal = tablaTipos->buscar(TA->lexema);
-                        // Como era base, sé que puedo hacerle un cast
-                        if (tipoTemporal) {
-                            SimboloTipoSimple *tipoAtomico = static_cast<SimboloTipoSimple *>(tipoTemporal);
-                            string tipo = tipoAtomico->tipoBase;
-                            for (auto identificador : colaIdentificadores) {
-                                tablaVariables->insertar(
-                                        new SimboloVariable(identificador->lexema, tipo, TIPO_CLASE_VARIABLE));
-                            }
-                        } else {
-                            cout << "esa verga no estaba declarada perro" << endl; //todo
-                        }
-                    } else if (MARILAT == TA->codigoFamilia) {
-                        // Si se declara un registro donde van las variables
-                        // Limpio la pila que acumula registros
-                        while (!pilaRegistros.empty()) {
-                            pilaRegistros.pop();
-                        }
-                        string identificadorRegistroGenerado = demeIdentificadorRegistro();
-                        SimboloTipoRegistro *tipoRegistro = new SimboloTipoRegistro(identificadorRegistroGenerado);
-                        vector<SimboloTipoRegistro *> *nuevoVector = new vector<SimboloTipoRegistro *>();
-                        nuevoVector->push_back(tipoRegistro);
-                        pilaRegistros.push(nuevoVector);
-                        for (auto identificador : colaIdentificadores) {
-                            tablaVariables->insertar(
-                                    new SimboloVariable(identificador->lexema, identificadorRegistroGenerado,
-                                                        TIPO_CLASE_VARIABLE));
-                        }
-                    } else if (KHALASSAR == TA->codigoFamilia) {
-
-                    }
-                    break;
-                }
                 case CrearCampoRegistro: {
                     if (!pilaRegistros.empty()) {
                         // Vamos a actualizar la cola de identificadores para sacar los campos que ya fueron declarados
@@ -435,9 +644,7 @@ int main(int argc, char *argv[]) {
                                             registroPadre->insertarSimbolo(
                                                     new SimboloTipoSimple(identificador->lexema, tipoAtomico->tipoBase,
                                                                           TIPO_CLASE_ATOMICO));
-
                                         }
-
                                     }
                                 } else if (tipoTemporal->soyReferenciaRegistro()) {
                                     // Obtengo los padres
@@ -445,7 +652,8 @@ int main(int argc, char *argv[]) {
                                     // Como es una referencia es tipo simple
                                     SimboloTipoSimple *tipoSimple = static_cast<SimboloTipoSimple *>(tipoTemporal);
                                     // Pero como es referencia a registro su base es un registro, lo busco
-                                    SimboloTipo *tipoRegistroDefinidoTemporal = tablaTipos->buscar(tipoSimple->tipoBase);
+                                    SimboloTipo *tipoRegistroDefinidoTemporal = tablaTipos->buscar(
+                                            tipoSimple->tipoBase);
                                     // Lo cast como el registro que es...
                                     SimboloTipoRegistro *tipoRegistroDefinido = static_cast<SimboloTipoRegistro *>(tipoRegistroDefinidoTemporal);
                                     for (auto registroPadre : *padres) {
@@ -490,6 +698,43 @@ int main(int argc, char *argv[]) {
                     }
                     break;
                 }
+                case AbrirLiteralArreglo: {
+                    // Si se abrió meta otra literal
+                    if (TA->codigoFamilia == CORCHETE_IZQUIERDO) {
+                        LiteralArreglo *nuevaLiteral = new LiteralArreglo();
+                        pilaLiteralesArreglo.push(nuevaLiteral);
+                    }
+                    break;
+                }
+                case CerrarLiteralArreglo: {
+                    // Si se cerró, intente insertarlo en el de arriba, si era el último métalo de nuevo.
+                    if (TA->codigoFamilia == CORCHETE_DERECHO) {
+                        if (!pilaLiteralesArreglo.empty()) {
+                            // Busco el del tope
+                            LiteralArreglo *literalTope = pilaLiteralesArreglo.top();
+                            // Lo saco
+                            pilaLiteralesArreglo.pop();
+                            // Si era el ultimo tata métalo again
+                            if (pilaLiteralesArreglo.empty()) {
+                                pilaLiteralesArreglo.push(literalTope);
+                                break;
+                            }
+                            // Si aun quedan, inserte en el de arriba
+                            LiteralArreglo *padre = pilaLiteralesArreglo.top();
+                            padre->insertarArreglo(literalTope);
+                        }
+                    }
+                    break;
+                }
+                case AgregarLiteralArreglo: {
+                    if (IDENTIFICADOR <= TA->codigoFamilia && TA->codigoFamilia <= LITERAL_FALSO) {
+                        if (!pilaLiteralesArreglo.empty()) {
+                            LiteralArreglo *literalTope = pilaLiteralesArreglo.top();
+                            literalTope->insertarToken(TA);
+                        }
+                    }
+                    break;
+                }
                 case AgregarIdentificadorEnLista: {
                     if (TA->codigoFamilia == IDENTIFICADOR) {
                         bool ignorarIdentificador = false;
@@ -509,228 +754,6 @@ int main(int argc, char *argv[]) {
                     }
                     break;
                 }
-                    // Revision de que los tipos inicializados con un identificador sean del tipo que se está usando
-                case RevisarIdBoolean: {
-                    if (TA->codigoFamilia == IDENTIFICADOR) {
-                        SimboloVariable *sv = tablaVariables->buscar(TA->lexema);
-
-                        if (sv) {
-                            if (sv->tipoClase != TIPO_CLASE_CONSTANTE) {
-                                cout << "Solo se puede inicializar con constantes o literales "
-                                     << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
-                                     << " columnaFin: "
-                                     << TA->columnaFin << '\n';
-                                break;
-                            }
-                            if (sv->tipo != TIPO_BOOLEAN) {
-                                cout << "Se debe inicializar con literal o constante akat "
-                                     << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
-                                     << " columnaFin: "
-                                     << TA->columnaFin << '\n';
-                                break;
-                            }
-                        } else {
-                            cout << "Constante no declarada "
-                                 << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
-                                 << " columnaFin: "
-                                 << TA->columnaFin << '\n';
-                            break;
-                        }
-
-                    }
-                }
-                case RevisarIdCaracter: {
-                    if (TA->codigoFamilia == IDENTIFICADOR) {
-                        SimboloVariable *sv = tablaVariables->buscar(TA->lexema);
-
-                        if (sv) {
-                            if (sv->tipoClase != TIPO_CLASE_CONSTANTE) {
-                                cout << "Solo se puede inicializar con constantes o literales "
-                                     << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
-                                     << " columnaFin: "
-                                     << TA->columnaFin << '\n';
-                                break;
-                            }
-                            if (sv->tipo != TIPO_CARACTER) {
-                                cout << "Se debe inicializar con literal o constante lirikh "
-                                     << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
-                                     << " columnaFin: "
-                                     << TA->columnaFin << '\n';
-                                break;
-                            }
-                        } else {
-                            cout << "Constante no declarada "
-                                 << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
-                                 << " columnaFin: "
-                                 << TA->columnaFin << '\n';
-                            break;
-                        }
-
-                    }
-                }
-                case RevisarIdEntero: {
-                    if (TA->codigoFamilia == IDENTIFICADOR) {
-                        SimboloVariable *sv = tablaVariables->buscar(TA->lexema);
-
-                        if (sv) {
-                            if (sv->tipoClase != TIPO_CLASE_CONSTANTE) {
-                                cout << "Solo se puede inicializar con constantes o literales "
-                                     << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
-                                     << " columnaFin: "
-                                     << TA->columnaFin << '\n';
-                                break;
-                            }
-                            if (sv->tipo != TIPO_ENTERO) {
-                                cout << "Se debe inicializar con literal o constante yorosor "
-                                     << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
-                                     << " columnaFin: "
-                                     << TA->columnaFin << '\n';
-                                break;
-                            }
-                        } else {
-                            cout << "Constante no declarada "
-                                 << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
-                                 << " columnaFin: "
-                                 << TA->columnaFin << '\n';
-                            break;
-                        }
-
-                    }
-                }
-                case RevisarIdString: {
-                    if (TA->codigoFamilia == IDENTIFICADOR) {
-                        SimboloVariable *sv = tablaVariables->buscar(TA->lexema);
-
-                        if (sv) {
-                            if (sv->tipoClase != TIPO_CLASE_CONSTANTE) {
-                                cout << "Solo se puede inicializar con constantes o literales "
-                                     << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
-                                     << " columnaFin: "
-                                     << TA->columnaFin << '\n';
-                                break;
-                            }
-                            if (sv->tipo != TIPO_STRING) {
-                                cout << "Se debe inicializar con literal o constante laqat "
-                                     << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
-                                     << " columnaFin: "
-                                     << TA->columnaFin << '\n';
-                                break;
-                            }
-                        } else {
-                            cout << "Constante no declarada "
-                                 << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
-                                 << " columnaFin: "
-                                 << TA->columnaFin << '\n';
-                            break;
-                        }
-
-                    }
-                }
-                case RevisarIdConjunto: {
-                    if (TA->codigoFamilia == IDENTIFICADOR) {
-                        SimboloVariable *sv = tablaVariables->buscar(TA->lexema);
-
-                        if (sv) {
-                            if (sv->tipoClase != TIPO_CLASE_CONSTANTE) {
-                                cout << "Solo se puede inicializar con constantes o literales "
-                                     << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
-                                     << " columnaFin: "
-                                     << TA->columnaFin << '\n';
-                                break;
-                            }
-                            if (sv->tipo != TIPO_CONJUNTO) {
-                                cout << "Se debe inicializar con literal o constante yanqokh "
-                                     << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
-                                     << " columnaFin: "
-                                     << TA->columnaFin << '\n';
-                                break;
-                            }
-                        } else {
-                            cout << "Constante no declarada "
-                                 << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
-                                 << " columnaFin: "
-                                 << TA->columnaFin << '\n';
-                            break;
-                        }
-
-                    }
-                }
-
-                case RevisarIdFraccion: {
-                    if (TA->codigoFamilia == IDENTIFICADOR) {
-                        SimboloVariable *sv = tablaVariables->buscar(TA->lexema);
-
-                        if (sv) {
-                            if (sv->tipoClase != TIPO_CLASE_CONSTANTE) {
-                                cout << "Solo se puede inicializar con constantes o literales "
-                                     << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
-                                     << " columnaFin: "
-                                     << TA->columnaFin << '\n';
-                                break;
-                            }
-                            if (sv->tipo != TIPO_FRACCION) {
-                                cout << "Se debe inicializar con literal o constante rissat "
-                                     << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
-                                     << " columnaFin: "
-                                     << TA->columnaFin << '\n';
-                                break;
-                            }
-                        } else {
-                            cout << "Constante no declarada "
-                                 << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
-                                 << " columnaFin: "
-                                 << TA->columnaFin << '\n';
-                            break;
-                        }
-
-                    }
-                    break;
-                }
-
-                case RevisarIdTipoDefinido: {
-                    if (TA->codigoFamilia == IDENTIFICADOR) {
-                        if (!colaIdentificadores.empty()) {
-                            TTemp = colaIdentificadores.front();
-                            SimboloVariable *sv = tablaVariables->buscar(TTemp->lexema);
-                            SimboloTipo *st = tablaTipos->buscar(sv->tipo);
-                            SimboloVariable *simboloVariable = tablaVariables->buscar(TA->lexema);
-                            if (st->soyAtomico()) {
-
-                                SimboloTipoSimple *simboloTipoSimple = static_cast<SimboloTipoSimple *> (st);
-                                if (simboloTipoSimple->tipoBase != simboloVariable->tipo) {
-                                    cout << "Se debe inicializar con literal o constante "
-                                         << simboloTipoSimple->tipoBase
-                                         << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
-                                         << " columnaFin: "
-                                         << TA->columnaFin << '\n';
-                                }
-
-                            }
-                            break;
-                        }
-                    } else {
-                        if (!colaIdentificadores.empty()) {
-
-                            TTemp = colaIdentificadores.front();
-                            SimboloVariable *sv = tablaVariables->buscar(TTemp->lexema);
-                            SimboloTipo *st = tablaTipos->buscar(sv->tipo);
-                            if (st->soyAtomico()) {
-                                SimboloTipoSimple *simboloTipoSimple = static_cast<SimboloTipoSimple *> (st);
-                                if (simboloTipoSimple->tipoBase != mapearTipo(TA->codigoFamilia)) {
-                                    cout << "Se debe inicializar con literal o constante "
-                                         << simboloTipoSimple->tipoBase
-                                         << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
-                                         << " columnaFin: "
-                                         << TA->columnaFin << '\n';
-                                }
-
-                            }
-                            break;
-                        }
-                    }
-
-                }
-
             }
         }
     }
@@ -747,6 +770,7 @@ int main(int argc, char *argv[]) {
         return 0;
 
     cout << "Compilacion terminada.\n";
+    cout << pilaLiteralesArreglo.size() << endl;
     //pilaArbolesExpresiones.top()->evaluate();
     /*
     {

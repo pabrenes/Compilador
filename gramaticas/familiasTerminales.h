@@ -132,9 +132,9 @@
 #define PARENTESIS_DERECHO 112
 /*
 #define 113
-#define 114
-#define 115
-#define 116
 */
+#define CORCHETE_IZQUIERDO 114
+#define CORCHETE_DERECHO 115
+#define COMA 116
 #define LITERAL_FRACCION 117
 #endif //COMPILADOR_FAMILIASTERMINALES_H
