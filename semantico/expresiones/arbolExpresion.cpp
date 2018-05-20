@@ -4,58 +4,78 @@
 
 #include "arbolExpresion.h"
 #include "../../gramaticas/Gramatica.h"
+#include "../../gramaticas/familiasTerminales.h"
 
 arbolExpresion::arbolExpresion() {
     raiz = nullptr;
 }
 
-void arbolExpresion::insertarToken(token *token, int precedencia) {
+void arbolExpresion::insertarToken(token *token, int precedencia, int tipo) {
+    nodoExpresion *nuevoNodo = new nodoExpresion(token, precedencia, tipo);
+    insertarToken(nuevoNodo);
+}
+
+void arbolExpresion::insertarToken(nodoExpresion *nuevoNodo) {
     if (raiz == nullptr)
-        raiz = new nodoExpresion(token, precedencia);
+        raiz = nuevoNodo;
     else {
         if (raiz->tipo) {
-            raiz = new nodoExpresion(raiz, token, precedencia);
+            nuevoNodo->izquierdo = raiz;
+            raiz = nuevoNodo;
         } else {
-            if (raiz->precedencia >= precedencia) {
-                raiz = new nodoExpresion(raiz, token, precedencia);
-            } else { //es menor
+            if (raiz->precedencia >= nuevoNodo->precedencia) {
+                nuevoNodo->izquierdo = raiz;
+                raiz = nuevoNodo;
+            } else {
                 if (raiz->derecho == nullptr)
-                    raiz->derecho = new nodoExpresion(token, precedencia);
-                else {
-                    if (raiz->derecho->tipo)
-                        raiz->derecho = new nodoExpresion (raiz->derecho, token, precedencia);
-                    else if (raiz->derecho->precedencia == precedencia)
-                        raiz->derecho = new nodoExpresion(raiz->derecho, token, precedencia);
-                    else
-                        insertarToken(raiz->derecho, token, precedencia);
-                }
+                    raiz->derecho = nuevoNodo;
+                else
+                    insertarToken(raiz, nuevoNodo);
             }
         }
     }
 }
 
-void arbolExpresion::insertarToken(nodoExpresion *nuevaRaiz, token *token, int precedencia) {
-    if (nuevaRaiz->derecho == nullptr)
-        nuevaRaiz->derecho = new nodoExpresion(token, precedencia);
-    else if (nuevaRaiz->derecho->precedencia == precedencia)
-        nuevaRaiz->derecho = new nodoExpresion(nuevaRaiz->derecho, token, precedencia);
-    else if (nuevaRaiz->derecho->tipo)
-        nuevaRaiz->derecho = new nodoExpresion (raiz->derecho, token, precedencia);
-
+void arbolExpresion::insertarToken(nodoExpresion *nuevoRaiz, nodoExpresion *nuevoNodo) {
+    if (nuevoRaiz->derecho == nullptr)
+        nuevoRaiz->derecho = nuevoNodo;
+    else {
+        if (nuevoRaiz->derecho->tipo || (nuevoRaiz->derecho->precedencia == nuevoNodo->precedencia)) {
+            nuevoNodo->izquierdo = nuevoRaiz->derecho;
+            nuevoRaiz->derecho = nuevoNodo;
+        } else
+            insertarToken(nuevoRaiz->derecho, nuevoNodo);
+    }
 }
 
-nodoExpresion::nodoExpresion(token *_token, int _precedencia) {
+void arbolExpresion::evaluate() {
+    std::cout << raiz->evaluate() << std::endl;
+}
+
+void arbolExpresion::actualizarComoParentesis() {
+    raiz->precedencia = NivelExpresionPrimaria;
+    raiz->tipo = TIPO_HOJA;
+    raiz->soyTransformista = true;
+}
+
+nodoExpresion::nodoExpresion(token *_token, int _precedencia, int _tipo) {
     izquierdo = nullptr;
     derecho = nullptr;
     elemento = _token;
     precedencia = _precedencia;
-    tipo = TIPO_HOJA;
+    soyTransformista = false;
+    tipo = _tipo;
 }
 
-nodoExpresion::nodoExpresion(nodoExpresion *_izquierdo, token *_token, int _precedencia) {
-    izquierdo = _izquierdo;
-    derecho = nullptr;
-    elemento = _token;
-    precedencia = _precedencia;
-    tipo = TIPO_NODO;
+int nodoExpresion::evaluate() {
+    if (tipo && !soyTransformista)
+        return stoi(elemento->lexema);
+    else {
+        switch (elemento->codigoFamilia) {
+            case NIVEL4_OPERADOR_SUMA:
+                return izquierdo->evaluate() + derecho->evaluate();
+            case NIVEL3_OPERADOR_MULTIPLICACION:
+                return izquierdo->evaluate() * derecho->evaluate();
+        }
+    }
 }

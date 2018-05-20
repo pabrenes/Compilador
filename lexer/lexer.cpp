@@ -489,7 +489,6 @@ token *validarToken(token *token) {
 
 token *demeToken() {
     if (tokenBuffer) {
-        delete tokenAnterior;
         token *actual = tokenBuffer;
         tokenAnterior = actual;
         tokenBuffer = nullptr;
@@ -511,7 +510,6 @@ token *demeToken() {
             return validarToken(nuevoActual);
         }
     }
-    delete tokenAnterior;
     tokenAnterior = actual;
     return validarToken(actual);
 }
