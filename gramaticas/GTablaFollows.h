@@ -1,7 +1,7 @@
 /*
  * GTablaFollows.h
  *
- * 2018/05/19 19:01:18
+ * 2018/05/19 21:53:11
  *
  * Archivo generado por GikGram 2.0
  *
@@ -19,6 +19,6 @@
 	#define MAX_FOLLOWS 100
 
 	/* Prototipo de la tabla de follows */
-	extern const int TablaFollows[123][MAX_FOLLOWS];
+	extern const int TablaFollows[121][MAX_FOLLOWS];
 
 #endif /* INC_GTablaFollows_h_ */
