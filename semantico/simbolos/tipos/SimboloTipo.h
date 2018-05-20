@@ -18,6 +18,8 @@
 #define TIPO_CLASE_ATOMICO 1
 #define TIPO_CLASE_ARREGLO 2
 #define TIPO_CLASE_REGISTRO 3
+#define TIPO_CLASE_REFERENCIA_REGISTRO 4
+#define TIPO_CLASE_REFERENCIA_ARREGLO 5
 
 class TablaSimbolosTipos;
 
@@ -40,6 +42,10 @@ public:
     bool soyArreglo();
 
     bool soyRegistro();
+
+    bool soyReferenciaRegistro();
+
+    bool soyReferenciaArreglo();
 };
 
 class SimboloTipoSimple : public SimboloTipo {

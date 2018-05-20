@@ -16,6 +16,14 @@ bool SimboloTipo::soyRegistro() {
     return this->tipoClase == TIPO_CLASE_REGISTRO;
 }
 
+bool SimboloTipo::soyReferenciaRegistro() {
+    return this->tipoClase == TIPO_CLASE_REFERENCIA_REGISTRO;
+}
+
+bool SimboloTipo::soyReferenciaArreglo() {
+    return this->tipoClase == TIPO_CLASE_REFERENCIA_ARREGLO;
+}
+
 SimboloTipoSimple::SimboloTipoSimple(std::string identificador) {
     this->identificador = identificador;
     this->tipoBase = identificador;

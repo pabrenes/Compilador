@@ -196,14 +196,24 @@ int main(int argc, char *argv[]) {
                                     tablaTipos->insertar(
                                             new SimboloTipoSimple(identificadorActual, tipoAtomico->tipoBase,
                                                                   TIPO_CLASE_ATOMICO));
+                                } else if (tipoTemporal->soyReferenciaArreglo()) {
+                                    SimboloTipoSimple *tipoAtomico = static_cast<SimboloTipoSimple *>(tipoTemporal);
+                                    tablaTipos->insertar(
+                                            new SimboloTipoSimple(identificadorActual, tipoAtomico->tipoBase,
+                                                                  TIPO_CLASE_REFERENCIA_ARREGLO));
+                                } else if (tipoTemporal->soyReferenciaRegistro()) {
+                                    SimboloTipoSimple *tipoAtomico = static_cast<SimboloTipoSimple *>(tipoTemporal);
+                                    tablaTipos->insertar(
+                                            new SimboloTipoSimple(identificadorActual, tipoAtomico->tipoBase,
+                                                                  TIPO_CLASE_REFERENCIA_REGISTRO));
                                 } else if (tipoTemporal->soyRegistro()) {
                                     tablaTipos->insertar(
                                             new SimboloTipoSimple(identificadorActual, tipoTemporal->identificador,
-                                                                  TIPO_CLASE_REGISTRO));
+                                                                  TIPO_CLASE_REFERENCIA_REGISTRO));
                                 } else if (tipoTemporal->soyArreglo()) {
                                     tablaTipos->insertar(
                                             new SimboloTipoSimple(identificadorActual, tipoTemporal->identificador,
-                                                                  TIPO_CLASE_ARREGLO));
+                                                                  TIPO_CLASE_REFERENCIA_ARREGLO));
                                 }
                             } else {
                                 cout << "eso no existe perro" << endl; //todo
@@ -243,7 +253,7 @@ int main(int argc, char *argv[]) {
                         TA->codigoFamilia == NIVEL2_OPERADOR_CONJUNTOVACIO ||
                         TA->codigoFamilia == NIVEL2_OPERADOR_ATHZHOKWAZAR ||
                         TA->codigoFamilia == NIVEL2_OPERADOR_DISISSE) {
-                        cout << TA->lexema << endl;
+
                     }
                     break;
                 case NivelExpresionPrimaria: //Apareció una primaria
@@ -427,6 +437,27 @@ int main(int argc, char *argv[]) {
                                         }
 
                                     }
+                                } else if (tipoTemporal->soyReferenciaRegistro()) {
+                                    // Obtengo los padres
+                                    vector<SimboloTipoRegistro *> *padres = pilaRegistros.top();
+                                    // Como es una referencia es tipo simple
+                                    SimboloTipoSimple *tipoSimple = static_cast<SimboloTipoSimple *>(tipoTemporal);
+                                    // Pero como es referencia a registro su base es un registro, lo busco
+                                    SimboloTipo *tipoRegistroDefinidoTemporal = tablaTipos->buscar(tipoSimple->tipoBase);
+                                    // Lo cast como el registro que es...
+                                    SimboloTipoRegistro *tipoRegistroDefinido = static_cast<SimboloTipoRegistro *>(tipoRegistroDefinidoTemporal);
+                                    for (auto registroPadre : *padres) {
+                                        // Inserto todos los pendientes en la cola con ese tipo registro;
+                                        for (token *identificador : colaIdentificadores) {
+                                            // Inserto en cada padre el tipo
+                                            registroPadre->insertarSimbolo(
+                                                    new SimboloTipoSimple(identificador->lexema,
+                                                                          tipoTemporal->identificador,
+                                                                          TIPO_CLASE_REGISTRO));
+                                            //Actualizo el espacio
+                                            registroPadre->espacio += tipoRegistroDefinido->espacio;
+                                        }
+                                    }
                                 } else if (tipoTemporal->soyRegistro()) {
                                     vector<SimboloTipoRegistro *> *padres = pilaRegistros.top();
                                     // Si era un identificador de un registro, lo busco para obtener su tamaño
@@ -445,16 +476,9 @@ int main(int argc, char *argv[]) {
                                         }
                                     }
                                 } else if (tipoTemporal->soyArreglo()) {
-                                    vector<SimboloTipoRegistro *> *padres = pilaRegistros.top();
-                                    for (auto registroPadre : *padres) {
-                                        // Inserto todos los pendientes en la cola con ese tipo registro;
-                                        for (token *identificador : colaIdentificadores) {
-                                            registroPadre->insertarSimbolo(
-                                                    new SimboloTipoSimple(identificador->lexema,
-                                                                          tipoTemporal->identificador,
-                                                                          TIPO_CLASE_ARREGLO));//todo tamanio arreglo
-                                        }
-                                    }
+                                    // todo
+                                } else if (tipoTemporal->soyReferenciaArreglo()) {
+                                    // todo
                                 }
                             } else {
                                 cout << "eso no existe perro" << endl; //todo
@@ -503,7 +527,7 @@ int main(int argc, char *argv[]) {
     //pilaArbolesExpresiones.top()->evaluate();
     /*
     {
-        SimboloTipo *simbolo = tablaTipos->buscar("nombre");
+        SimboloTipo *simbolo = tablaTipos->buscar("hola");
         SimboloTipoRegistro *test = static_cast<SimboloTipoRegistro *>(simbolo);
         for (auto a : test->camposRegistroDesplazamiento) {
             cout << a->identiificador << ' ' << a->desplazamiento << endl;
