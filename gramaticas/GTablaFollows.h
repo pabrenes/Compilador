@@ -1,12 +1,12 @@
 /*
  * GTablaFollows.h
  *
- * 2018/05/19 21:12:09
+ * 2018/05/19 21:53:11
  *
  * Archivo generado por GikGram 2.0
  *
- * Copyright ï¿½ Olminsky 2011 Derechos reservados
- * Reproducciï¿½n sin fines de lucro permitida
+ * Copyright © Olminsky 2011 Derechos reservados
+ * Reproducción sin fines de lucro permitida
  */
 #pragma once
 
@@ -15,7 +15,7 @@
 
 	#include "Gramatica.h"
 
-	/* Constantes necesarias para el algoritmo de recuperaciï¿½n de errores */
+	/* Constantes necesarias para el algoritmo de recuperación de errores */
 	#define MAX_FOLLOWS 100
 
 	/* Prototipo de la tabla de follows */

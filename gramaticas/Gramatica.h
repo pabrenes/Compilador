@@ -1,12 +1,12 @@
 /*
  * Gramatica.h
  *
- * 2018/05/19 21:12:09
+ * 2018/05/19 21:53:11
  *
  * Archivo generado por GikGram 2.0
  *
- * Copyright ï¿½ Olminsky 2011 Derechos reservados
- * Reproducciï¿½n sin fines de lucro permitida
+ * Copyright © Olminsky 2011 Derechos reservados
+ * Reproducción sin fines de lucro permitida
  */
 #pragma once
 
@@ -20,7 +20,7 @@
 	#define NO_TERMINAL_INICIAL 119
 	#define MAX_LADO_DER 11
 
-	/* Constantes con las rutinas semï¿½nticas */
+	/* Constantes con las rutinas semánticas */
 	#define ValidarExistenciaIdentificadorConstante 240
 	#define PrepararSimboloConstante 241
 	#define ActualizarSimboloConstante 242
