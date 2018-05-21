@@ -113,7 +113,8 @@ void ExpresionBinaria::validarAsignacion() {
     if (NIVEL16_OPERADOR_ASIGNACION_SIMPLE <= termino->codigoFamilia &&
         termino->codigoFamilia <= NIVEL16_OPERADOR_ASIGNACION_CONCATENAR) {
         if (derecha->tipo != TIPO_PRIMARIA) {
-            std::cout << "se mamo la iegua perro" << std::endl; //todo
+            std::cout << "Error semantico, el elemento debe ser una referencia a memoria para ser asignado"
+                      << ". En linea: " << termino->fila << " ,columna: " << termino->columnaInicio << std::endl;
         } else {
             derecha->validarAsignacion();
         }
@@ -236,7 +237,8 @@ void ExpresionPrimaria::validarAsignacion() {
     //Aqui estoy validando que sea un elemento correcto para ser asignado, el lado derecho, es decir debe ser una variable
     //Empiezo por buscar que sea un identificador, si no no tiene sentido asignarlo
     if (termino->codigoFamilia != IDENTIFICADOR) {
-        std::cout << "No un elemento valido para ser asignado" << std::endl; //todo
+        std::cout << "Error semantico, el elemento debe ser una referencia a memoria para ser asignado"
+                  << ". En linea: " << termino->fila << " ,columna: " << termino->columnaInicio << std::endl;
     } else {
         //ya sé que era un identificador, lo busco
         SimboloVariable *sv = tablaVariables->buscar(termino->lexema);
@@ -244,7 +246,8 @@ void ExpresionPrimaria::validarAsignacion() {
         if (sv) {
             // Si es constante se mamo la iegua
             if (sv->tipoClase == TIPO_CLASE_CONSTANTE) {
-                std::cout << "No puedes asginar una constante perro" << std::endl; //todo
+                std::cout << "Error semantico, el elemento referenciado no puede ser una constante para ser asignado"
+                          << ". En linea: " << termino->fila << " ,columna: " << termino->columnaInicio << std::endl;
             } else {
                 // Saque el tipo base
                 std::string tipoBase = sv->tipo;
@@ -263,7 +266,9 @@ void ExpresionPrimaria::validarAsignacion() {
                 else if (st->soyReferenciaRegistro()) {
                     // Busque el padre de la referencia
                     if (operadoresPosfijos.empty()) {
-                        std::cout << "Soy un registro, no soy valido para ser asignado" << std::endl; //todo
+                        std::cout << "Error semantico, el elemento no es una referencia a memoria valida."
+                                  << ". En linea: " << termino->fila << " ,columna: " << termino->columnaInicio
+                                  << std::endl;
                     } else {
                         SimboloTipoSimple *stp = static_cast<SimboloTipoSimple *>(st);
                         SimboloTipo *stt = tablaTipos->buscar(stp->tipoBase);
@@ -274,14 +279,18 @@ void ExpresionPrimaria::validarAsignacion() {
                     // Si es atomico debe ser además simple, ie, no tener posfijos
                 else if (st->soyAtomico()) {
                     if (!this->operadoresPosfijos.empty()) {
-                        std::cout << "no es referencia a memoria" << std::endl; //todo
+                        std::cout << "Error semantico, el elemento no es una referencia a memoria valida."
+                                  << ". En linea: " << termino->fila << " ,columna: " << termino->columnaInicio
+                                  << std::endl;
                     }
                 }
             }
         }
             //Diga que no existe
         else {
-            std::cout << "identificador no fue declarado" << std::endl; //todo
+            std::cout << "Error semantico, el identificador referenciado no fue declarado previamente."
+                      << ". En linea: " << termino->fila << " ,columna: " << termino->columnaInicio
+                      << std::endl;
             //todo aquí se puede buscar en la otra tabla a ver si se mamo la iegua y era otra cosa
         }
     }
@@ -301,22 +310,33 @@ void ExpresionPrimaria::validarPosfijos(SimboloTipoRegistro *tipoRegistro) {
                     if ((i != (operadoresPosfijos.size() - 1))) {
                         auto opt = operadoresPosfijos.at(i + 1);
                         if (opt->tipo == NIVEL1_OPERADOR_ACCESO_REGISTRO) {
-                            std::cout << "esto no es un registro para poder acceder su campo" << std::endl; //todo
+                            std::cout << "Error semantico, el elemento no es una referencia a un registro. No puede ser"
+                                      << " accedido mediante ->. En linea: " << termino->fila << " ,columna: "
+                                      << termino->columnaInicio
+                                      << std::endl;
                         } else {
-                            std::cout << "no es una referencia valida de memoerira" << std::endl; //todo
+                            std::cout << "Error semantico, el elemento no es una referencia a memoria valida."
+                                      << ". En linea: " << termino->fila << " ,columna: " << termino->columnaInicio
+                                      << std::endl;
                         }
                     }
                 } else if (st->soyRegistro()) {
                     // Si es registro y ya no hay más operados posfijos error
                     if (i == (operadoresPosfijos.size() - 1)) {
-                        std::cout << "Soy un registro, no soy valido para ser asignado" << std::endl; //todo
+                        std::cout << "Error semantico, el elemento no es una referencia a memoria valida," <<
+                                  " es un registro. En linea: " << termino->fila << " ,columna: "
+                                  << termino->columnaInicio
+                                  << std::endl;
                     } else {
                         actual = static_cast<SimboloTipoRegistro *>(st);
                     }
                 } else if (st->soyReferenciaRegistro()) {
                     // Si es registro y ya no hay más operados posfijos error
                     if (i == (operadoresPosfijos.size() - 1)) {
-                        std::cout << "Soy un registro, no soy valido para ser asignado" << std::endl; //todo
+                        std::cout << "Error semantico, el elemento no es una referencia a un registro. No puede ser"
+                                  << " accedido mediante ->. En linea: " << termino->fila << " ,columna: "
+                                  << termino->columnaInicio
+                                  << std::endl;
                     } else {
                         SimboloTipoSimple *stp = static_cast<SimboloTipoSimple *>(st);
                         SimboloTipo *stt = tablaTipos->buscar(stp->tipoBase);
@@ -324,7 +344,10 @@ void ExpresionPrimaria::validarPosfijos(SimboloTipoRegistro *tipoRegistro) {
                     }
                 }
             } else {
-                std::cout << "ese registro (la primaria)no tiene el campo(el del temrmino)" << std::endl; //todo
+                std::cout << "Error semantico, el registro referenciado no tiene el campo indicado"
+                          << " accedido mediante ->. En linea: " << termino->fila << " ,columna: "
+                          << termino->columnaInicio
+                          << std::endl;
             }
         }
     }
