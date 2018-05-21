@@ -979,7 +979,8 @@ int main(int argc, char *argv[]) {
 
                 case EvaluarExpresion: {
                     if (TA->codigoFamilia == TERMINADOR) {
-                        pilaArbolesExpresiones.top()->evaluar();
+                        if (!pilaArbolesExpresiones.empty())
+                            pilaArbolesExpresiones.top()->evaluar();
                     }
                     break;
                 }
