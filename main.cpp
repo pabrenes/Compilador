@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
     token *TF;
 
     // Pila para los switch
-    stack<bool> PilaNakhaan;
+    stack<bool> *PilaNakhaan = new stack<bool> ();
 
     // Variables de control semantico
     bool hayRet = false;
@@ -942,28 +942,28 @@ int main(int argc, char *argv[]) {
                 }
                 case RevisarDefault : {
                     if (TA->codigoFamilia == NAKHAAN) {
-                        int X = PilaNakhaan.top();
-                        PilaNakhaan.pop();
+                        bool X = PilaNakhaan->top();
+                        //PilaNakhaan->pop();
                         if (X)
                             cout << "Más de un default en switch "
                                  << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
                                  << " columnaFin: "
                                  << TA->columnaFin << '\n';
                         else
-                            PilaNakhaan.push(true);
+                            PilaNakhaan->push(true);
                         break;
                     }
                     break;
                 }
                 case EmpujarFalsoNakhaan : {
                     if (TA->codigoFamilia == VERAT) {
-                        PilaNakhaan.push(false);
+                        PilaNakhaan->push(false);
                     }
                     break;
                 }
                 case BotePilaNakhaan : {
                     if (TA->codigoFamilia == NAKHO)
-                        PilaNakhaan.pop();
+                        PilaNakhaan->pop();
                     break;
                 }
 
