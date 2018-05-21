@@ -29,6 +29,8 @@ class SimboloTipoSimple;
 
 class SimboloTipoRegistro;
 
+class SimboloTipoArreglo;
+
 class CamposDesplazamiento;
 
 class SimboloTipo {
@@ -71,6 +73,14 @@ public:
 
 private:
     int mapearTamano(std::string tipoBase);
+};
+
+class SimboloTipoArreglo : public SimboloTipo {
+
+public:
+    std::vector<int> dimensiones;
+    std::string tipoBase;
+
 };
 
 class CamposDesplazamiento {

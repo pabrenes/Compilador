@@ -28,6 +28,7 @@ const int posicionNombreArchivo = 1;
 bool banderaErrorSintactico = false;
 bool banderaErrorSemantico = false;
 
+
 int main(int argc, char *argv[]) {
     // Se inicia el escaner, prepara el documento para obtener tokens
     iniciarScanner(argv[posicionNombreArchivo]);
@@ -41,6 +42,18 @@ int main(int argc, char *argv[]) {
     // Pila para manipular el manejo de errores gramaticales
     stack<int> PilaAuxiliar;
 
+    // Para guardar el id de una función
+    token *TF;
+
+    // Pila para los switch
+    stack<bool> PilaNakhaan;
+
+    // Variables de control semantico
+    bool hayRet = false;
+    bool usandoFuncion = false;
+    bool usandoProc = false;
+    bool secuenciadores = false;
+
     // Determina si el identificador actual para una declaración está siendo utilizado o no, para evitar su reescritura
     bool bloquearIdentificador = false;
     // Almacena el identificador actual
@@ -52,7 +65,6 @@ int main(int argc, char *argv[]) {
     TablaSimbolosTipos *tablaTipos = new TablaSimbolosTipos(512);
     // Actualiza la tabla de tipos con todos los tipos primitivos
     tablaTipos->llenarPrimitivos();
-
     // Construye una tabla hash para almacenar declaraciones de variables y constantes
     TablaSimbolosVariables *tablaVariables = new TablaSimbolosVariables(2048);
 
@@ -61,11 +73,12 @@ int main(int argc, char *argv[]) {
     // Pila de tablas de símbolos para almacenar elementos en los registros
     stack<vector<SimboloTipoRegistro *> *> pilaRegistros;
     // Pila de árboles de expresiones para manipular expresiones encontradas, es una pila para manipular los paréntesis
-    stack<arbolExpresion *> pilaArbolesExpresiones;
+    stack<ArbolExpresion *> pilaArbolesExpresiones;
     // Temporal para una expresión primaria
     ExpresionPrimaria *expresionPrimariaTemporal = new ExpresionPrimaria();
     // Temporal para un operador posfijo simple (para los accesos de registro y string)
     OperadorPosfijoSimple *operadorPosfijoSimpleTemporal = new OperadorPosfijoSimple();
+    OperadorPosfijoExpresion *operadorPosfijoExpresionTemporal = new OperadorPosfijoExpresion();
 
     PilaParsing.push(NO_TERMINAL_INICIAL);
 
@@ -190,6 +203,7 @@ int main(int argc, char *argv[]) {
                             pilaRegistros.push(nuevoVector);
 
                         } else if (KHALASSAR == TA->codigoFamilia) {
+
 
                         } else if (IDENTIFICADOR == TA->codigoFamilia) {
                             // Como era identificador primero me aseguro de que exista
@@ -493,14 +507,83 @@ int main(int argc, char *argv[]) {
                     break;
                 }
                 case GenerarExpresionInstruccion: //Inicio de una expresion
-                    pilaArbolesExpresiones.push(new arbolExpresion());
+                    while(!pilaArbolesExpresiones.empty())
+                        pilaArbolesExpresiones.pop();
+                    pilaArbolesExpresiones.push(new ArbolExpresion(tablaTipos, tablaVariables));
                     break;
+                case GenerarNivel16: {
+                    if (NIVEL16_OPERADOR_ASIGNACION_SIMPLE <= TA->codigoFamilia &&
+                        TA->codigoFamilia <= NIVEL16_OPERADOR_ASIGNACION_CONCATENAR) {
+                        pilaArbolesExpresiones.top()->insertarExpresion(new ExpresionBinaria(TA, GenerarNivel16));
+                    }
+                    break;
+                }
+                case GenerarNivel13: {
+                    if (TA->codigoFamilia == NIVEL13_OPERADOR_OR) {
+                        pilaArbolesExpresiones.top()->insertarExpresion(new ExpresionBinaria(TA, GenerarNivel13));
+                    }
+                    break;
+                }
+                case GenerarNivel12: {
+                    if (TA->codigoFamilia == NIVEL12_OPERADOR_XOR) {
+                        pilaArbolesExpresiones.top()->insertarExpresion(new ExpresionBinaria(TA, GenerarNivel12));
+                    }
+                    break;
+                }
+                case GenerarNivel11: {
+                    if (TA->codigoFamilia == NIVEL11_OPERADOR_AND) {
+                        pilaArbolesExpresiones.top()->insertarExpresion(new ExpresionBinaria(TA, GenerarNivel11));
+                    }
+                    break;
+                }
+                case GenerarNivel10: {
+                    if (TA->codigoFamilia == NIVEL10_OPERADOR_DIFERENTE ||
+                        TA->codigoFamilia == NIVEL10_OPERADOR_IGUALDAD) {
+                        pilaArbolesExpresiones.top()->insertarExpresion(new ExpresionBinaria(TA, GenerarNivel10));
+                    }
+                    break;
+                }
+                case GenerarNivel9: {
+                    if (TA->codigoFamilia == NIVEL9_OPERADOR_MENOR ||
+                        TA->codigoFamilia == NIVEL9_OPERADOR_MENOR_IGUAL ||
+                        TA->codigoFamilia == NIVEL9_OPERADOR_MAYOR ||
+                        TA->codigoFamilia == NIVEL9_OPERADOR_MAYOR_IGUAL) {
+                        pilaArbolesExpresiones.top()->insertarExpresion(new ExpresionBinaria(TA, GenerarNivel9));
+                    }
+                    break;
+                }
+                case GenerarNivel8: {
+                    if (TA->codigoFamilia == NIVEL8_OPERADOR_BUSCAR_CONJUNTO) {
+                        pilaArbolesExpresiones.top()->insertarExpresion(new ExpresionBinaria(TA, GenerarNivel8));
+                    }
+                    break;
+                }
+                case GenerarNivel7: {
+                    if (TA->codigoFamilia == NIVEL7_OPERADOR_INTERSECCION ||
+                        TA->codigoFamilia == NIVEL7_OPERADOR_UNION) {
+                        pilaArbolesExpresiones.top()->insertarExpresion(new ExpresionBinaria(TA, GenerarNivel7));
+                    }
+                    break;
+                }
+                case GenerarNivel6: {
+                    if (TA->codigoFamilia == NIVEL6_OPERADOR_AGREGAR_CONJUNTO ||
+                        TA->codigoFamilia == NIVEL6_OPERADOR_BORRAR_CONJUNTO) {
+                        pilaArbolesExpresiones.top()->insertarExpresion(new ExpresionBinaria(TA, GenerarNivel6));
+                    }
+                    break;
+                }
+                case GenerarNivel5: {
+                    if (TA->codigoFamilia == NIVEL5_OPERADOR_CONCATENAR) {
+                        pilaArbolesExpresiones.top()->insertarExpresion(new ExpresionBinaria(TA, GenerarNivel5));
+                    }
+                    break;
+                }
                 case GenerarNivel4: //Nivel de las adiciones
                     if (TA->codigoFamilia == NIVEL4_OPERADOR_SUMA ||
                         TA->codigoFamilia == NIVEL4_OPERADOR_RESTA ||
                         TA->codigoFamilia == NIVEL4_OPERADOR_FENAT ||
                         TA->codigoFamilia == NIVEL4_OPERADOR_EJERVALAT) {
-                        pilaArbolesExpresiones.top()->insertarToken(TA, GenerarNivel4, TIPO_NODO);
+                        pilaArbolesExpresiones.top()->insertarExpresion(new ExpresionBinaria(TA, GenerarNivel4));
                     }
                     break;
                 case GenerarNivel3: //Nivel de las multiplicaciones
@@ -509,7 +592,7 @@ int main(int argc, char *argv[]) {
                         TA->codigoFamilia == NIVEL3_OPERADOR_MODULO ||
                         TA->codigoFamilia == NIVEL3_OPERADOR_ANAQUISAN ||
                         TA->codigoFamilia == NIVEL3_OPERADOR_GOVAT) {
-                        pilaArbolesExpresiones.top()->insertarToken(TA, GenerarNivel3, TIPO_NODO);
+                        pilaArbolesExpresiones.top()->insertarExpresion(new ExpresionBinaria(TA, GenerarNivel3));
                     }
                     break;
                 case GenerarNivel2: //Nivel de las unarias (prefijas)
@@ -523,42 +606,53 @@ int main(int argc, char *argv[]) {
                         TA->codigoFamilia == NIVEL2_OPERADOR_CONJUNTOVACIO ||
                         TA->codigoFamilia == NIVEL2_OPERADOR_ATHZHOKWAZAR ||
                         TA->codigoFamilia == NIVEL2_OPERADOR_DISISSE) {
-
+                        pilaArbolesExpresiones.top()->insertarExpresion(new ExpresionUnaria(TA, GenerarNivel2));
                     }
                     break;
                 case NivelExpresionPrimaria: //Apareció una primaria
-                    if (TA->codigoFamilia >= LITERAL_ENTERA && TA->codigoFamilia <= LITERAL_FALSO) {
-                        expresionPrimariaTemporal = new ExpresionPrimaria(TA);
-                        //Aquí debería insertarla en el arbol normal, pero mantengo la referencia fuera para ir agregándole los operadores postfijos que me encuentre
-                        //pilaArbolesExpresiones.top->insertarExpresion();
-                        //pilaArbolesExpresiones.top()->insertarToken(TA, NivelExpresionPrimaria, TIPO_HOJA);
-                    } else {
-                        switch (TA->codigoFamilia) {
-                            case PARENTESIS_IZQUIERDO:
-                                pilaArbolesExpresiones.push(new arbolExpresion());
-                                break;
-                        }
+                    if ((TA->codigoFamilia >= LITERAL_ENTERA && TA->codigoFamilia <= LITERAL_FALSO) ||
+                        (YOROSOR <= TA->codigoFamilia && TA->codigoFamilia <= RISSAT) ||
+                        TA->codigoFamilia == IDENTIFICADOR) {
+                        expresionPrimariaTemporal = new ExpresionPrimaria(TA, NivelExpresionPrimaria);
+                        //Aquí inserto en el arbol normal, pero mantengo la referencia para agregar postfijos
+                        pilaArbolesExpresiones.top()->insertarExpresion(expresionPrimariaTemporal);
+                    } else if (TA->codigoFamilia == PARENTESIS_IZQUIERDO) {
+                        pilaArbolesExpresiones.push(new ArbolExpresion(tablaTipos, tablaVariables));
+                        break;
                     }
                     break;
                 case GenerarNivelPosFijo: //Nivel de los posfijos (postfijas)
                     switch (TA->codigoFamilia) {
                         case NIVEL1_OPERADOR_ACCESO_REGISTRO:
-                            operadorPosfijoSimpleTemporal = new OperadorPosfijoSimple(TA->codigoFamilia);
+                            operadorPosfijoSimpleTemporal = new OperadorPosfijoSimple(TA->codigoFamilia, TA);
+                            break;
+                        case NIVEL1_OPERADOR_ACCESO_STRING :
+                            operadorPosfijoExpresionTemporal = new OperadorPosfijoExpresion(TA->codigoFamilia, TA);
                             break;
                     }
                     break;
                 case AccesoRegistroExpresion:
-                    if (TA->codigoFamilia == IDENTIFICADOR) {
+                    if (TA->codigoFamilia == IDENTIFICADOR ||
+                        (TA->codigoFamilia >= LITERAL_ENTERA && TA->codigoFamilia <= LITERAL_FALSO) ||
+                        (YOROSOR <= TA->codigoFamilia && TA->codigoFamilia <= RISSAT)) {
                         operadorPosfijoSimpleTemporal->insertartTermino(TA);
                         expresionPrimariaTemporal->AgregarOperadorPosfijo(operadorPosfijoSimpleTemporal);
                     }
                     break;
+                case AccesoStringExpresion:
+                    if (TA->codigoFamilia == IDENTIFICADOR ||
+                        (TA->codigoFamilia >= LITERAL_ENTERA && TA->codigoFamilia <= LITERAL_FALSO) ||
+                        (YOROSOR <= TA->codigoFamilia && TA->codigoFamilia <= RISSAT)) {
+                        operadorPosfijoExpresionTemporal->expresion->insertarExpresion(
+                                new ExpresionPrimaria(TA, NivelExpresionPrimaria));
+                    } // cuando es parentesis falta //todo
+                    break;
                 case CerrarExpresionParentesis: { //Me encontré cerrar un paréntesis, debo cerrar la útlima estructura de expresión.
-                    arbolExpresion *temporal = pilaArbolesExpresiones.top();
-                    if (temporal->raiz->tipo == TIPO_NODO)
+                    ArbolExpresion *temporal = pilaArbolesExpresiones.top();
+                    if (temporal->raiz->tipo == TIPO_BINARIA)
                         temporal->actualizarComoParentesis();
                     pilaArbolesExpresiones.pop();
-                    pilaArbolesExpresiones.top()->insertarToken(temporal->raiz);
+                    pilaArbolesExpresiones.top()->insertarExpresion(temporal->raiz);
                     break;
                 }
                 case CerrarRegistroPadre: {
@@ -621,7 +715,8 @@ int main(int argc, char *argv[]) {
                         } else if (MARILAT == TA->codigoFamilia) {
                             vector<SimboloTipoRegistro *> *nuevosPadres = new vector<SimboloTipoRegistro *>();
                             for (token *identificador : colaIdentificadores) {
-                                SimboloTipoRegistro *tipoRegistro = new SimboloTipoRegistro(identificador->lexema);
+                                SimboloTipoRegistro *tipoRegistro = new SimboloTipoRegistro(
+                                        identificador->lexema);
                                 nuevosPadres->push_back(tipoRegistro);
                             }
                             pilaRegistros.push(nuevosPadres);
@@ -642,7 +737,8 @@ int main(int argc, char *argv[]) {
                                         // Inserto todos los pendientes en la cola con ese tipo
                                         for (token *identificador : colaIdentificadores) {
                                             registroPadre->insertarSimbolo(
-                                                    new SimboloTipoSimple(identificador->lexema, tipoAtomico->tipoBase,
+                                                    new SimboloTipoSimple(identificador->lexema,
+                                                                          tipoAtomico->tipoBase,
                                                                           TIPO_CLASE_ATOMICO));
                                         }
                                     }
@@ -754,6 +850,150 @@ int main(int argc, char *argv[]) {
                     }
                     break;
                 }
+                case RevisarDefault : {
+                    if (TA->codigoFamilia == NAKHAAN) {
+                        int X = PilaNakhaan.top();
+                        PilaNakhaan.pop();
+                        if (X)
+                            cout << "Más de un default en switch "
+                                 << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
+                                 << " columnaFin: "
+                                 << TA->columnaFin << '\n';
+                        else
+                            PilaNakhaan.push(true);
+                        break;
+                    }
+                    break;
+                }
+                case EmpujarFalsoNakhaan : {
+                    if (TA->codigoFamilia == VERAT) {
+                        PilaNakhaan.push(false);
+                    }
+                    break;
+                }
+                case BotePilaNakhaan : {
+                    if (TA->codigoFamilia == NAKHO)
+                        PilaNakhaan.pop();
+                    break;
+                }
+
+                    // Casos de análisis de un sólo return por rutina
+                case InicializarVariableReturn : {
+                    if (TA->codigoFamilia == ASSOKH) {
+                        hayRet = false;
+                        usandoFuncion = true;
+                    }
+                    break;
+                }
+
+                case RevisarReturnFuncion : {
+                    if (TA->codigoFamilia == NAKHO) {
+                        if (!hayRet) {
+                            cout << "No hay return en la funcion "
+                                 << TF->lexema << endl;
+                        }
+                        usandoFuncion = false;
+                    }
+                    break;
+                }
+
+                case RevisarQueSeUseFuncion : {
+                    if (TA->codigoFamilia == IRGE) {
+
+                        if (!usandoFuncion && !usandoProc) {
+                            cout << "Se usa return en contexto fuera de funcion o procedimiento"
+                                 << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
+                                 << " columnaFin: "
+                                 << TA->columnaFin << '\n';
+                        } else {
+                            hayRet = true;
+                        }
+                    }
+                    break;
+                }
+                case RevisarCuerpoParaFuncion: {
+                    if (usandoFuncion) {
+                        if (TA->codigoFamilia == TERMINADOR) {
+                            cout << "Return sin cuerpo en la funcion "
+                                 << TF->lexema << endl;
+                        }
+                    }
+                    break;
+                }
+                case RevisarCuerpoParaProc: {
+                    if (TA->codigoFamilia != TERMINADOR && usandoProc) {
+                        cout << "Intento de retorno con valor en procedimiento "
+                             << TF->lexema << endl;
+                    }
+                    break;
+                }
+
+                case InicializarVariableProc : {
+                    if (TA->codigoFamilia == THIKH) {
+                        usandoProc = true;
+                    }
+                    break;
+                }
+                case QuitarIdentificadoresProc : {
+                    if (TA->codigoFamilia == NAKHO) {
+                        usandoProc = false;
+                    }
+                    break;
+                }
+                case GuardarNombreFunc: {
+                    if (TA->codigoFamilia == IDENTIFICADOR) {
+                        TF = TA;
+                    }
+                    break;
+                }
+                case GuardarNombreProc: {
+                    if (TA->codigoFamilia == IDENTIFICADOR) {
+                        TF = TA;
+                    }
+                    break;
+                }
+                    // REVISAR QUE LOS BLOQUES ESTEN EN SU LUGAR
+                case RevisarUsoBloques: {
+                    if (TA->codigoFamilia == EVAT) {
+                        cout << "Uso indebido de bloques"
+                             << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio << " columnaFin: "
+                             << TA->columnaFin << '\n';
+                    }
+                    break;
+                }
+
+                    // REVISAR QUE LOS SECUENCIADORES SE USEN EN CICLOS
+                case ActivarSecuenciadores: {
+                    if (TA->codigoFamilia == KASH || TA->codigoFamilia == SAVE || TA->codigoFamilia == HA) {
+                        secuenciadores = true;
+                    }
+                    break;
+                }
+
+                case DesactivarSecuenciadores: {
+                    if (TA->codigoFamilia == TERMINADOR) {
+                        secuenciadores = false;
+                    }
+                    break;
+                }
+
+                case EvaluarExpresion: {
+                    if (TA->codigoFamilia == TERMINADOR) {
+                        pilaArbolesExpresiones.top()->evaluar();
+                    }
+                    break;
+                }
+
+                case RevisarSecuenciadores: {
+                    if (TA->codigoFamilia == YARAT || TA->codigoFamilia == SILLE) {
+                        if (!secuenciadores) {
+                            cout << "No se permite el uso de secuenciadores fuera de ciclos"
+                                 << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
+                                 << " columnaFin: "
+                                 << TA->columnaFin << '\n';
+                        }
+                    }
+                }
             }
         }
     }
@@ -770,9 +1010,9 @@ int main(int argc, char *argv[]) {
         return 0;
 
     cout << "Compilacion terminada.\n";
+    /*
     cout << pilaLiteralesArreglo.size() << endl;
     //pilaArbolesExpresiones.top()->evaluate();
-    /*
     {
         SimboloTipo *simbolo = tablaTipos->buscar("hola");
         SimboloTipoRegistro *test = static_cast<SimboloTipoRegistro *>(simbolo);
