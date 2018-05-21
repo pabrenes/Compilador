@@ -1,7 +1,7 @@
 /*
  * Gramatica.h
  *
- * 2018/05/20 15:24:38
+ * 2018/05/20 20:32:11
  *
  * Archivo generado por GikGram 2.0
  *
@@ -18,7 +18,7 @@
 	#define NO_TERMINAL(X)  ((119 <= (X)) && ((X) <= 239))
 	#define MARCA_DERECHA 118
 	#define NO_TERMINAL_INICIAL 119
-	#define MAX_LADO_DER 11
+	#define MAX_LADO_DER 14
 
 	/* Constantes con las rutinas semánticas */
 	#define ValidarExistenciaIdentificadorConstante 240
@@ -36,25 +36,49 @@
 	#define RevisarIdString 252
 	#define RevisarIdBoolean 253
 	#define RevisarIdConjunto 254
-	#define IniciarRegistroPadre 255
-	#define RevisarIdFraccion 256
-	#define GenerarExpresionInstruccion 257
-	#define GenerarNivel4 258
-	#define GenerarNivel3 259
-	#define GenerarNivel2 260
-	#define NivelExpresionPrimaria 261
-	#define GenerarNivelPosFijo 262
-	#define AccesoRegistroExpresion 263
-	#define CerrarExpresionParentesis 264
-	#define CerrarRegistroPadre 265
-	#define CrearCampoRegistro 266
-	#define IniciarIndiceReg 267
-	#define TerminarIndiceReg 268
-	#define AbrirLiteralArreglo 269
-	#define CerrarLiteralArreglo 270
-	#define AgregarLiteralArreglo 271
-	#define RevisarLitRegistro 272
-	#define AgregarIdentificadorEnLista 273
+	#define RevisarIdFraccion 255
+	#define InicializarVariableReturn 256
+	#define GuardarNombreFunc 257
+	#define RevisarReturnFuncion 258
+	#define InicializarVariableProc 259
+	#define GuardarNombreProc 260
+	#define QuitarIdentificadoresProc 261
+	#define RevisarUsoBloques 262
+	#define RevisarSecuenciadores 263
+	#define DesactivarSecuenciadores 264
+	#define EvaluarExpresion 265
+	#define EmpujarFalsoNakhaan 266
+	#define BotePilaNakhaan 267
+	#define RevisarDefault 268
+	#define ActivarSecuenciadores 269
+	#define RevisarQueSeUseFuncion 270
+	#define RevisarCuerpoParaFuncion 271
+	#define RevisarCuerpoParaProc 272
+	#define GenerarExpresionInstruccion 273
+	#define GenerarNivel16 274
+	#define GenerarNivel13 275
+	#define GenerarNivel12 276
+	#define GenerarNivel11 277
+	#define GenerarNivel10 278
+	#define GenerarNivel9 279
+	#define GenerarNivel8 280
+	#define GenerarNivel7 281
+	#define GenerarNivel6 282
+	#define GenerarNivel5 283
+	#define GenerarNivel4 284
+	#define GenerarNivel3 285
+	#define GenerarNivel2 286
+	#define NivelExpresionPrimaria 287
+	#define GenerarNivelPosFijo 288
+	#define AccesoRegistroExpresion 289
+	#define AccesoStringExpresion 290
+	#define CerrarExpresionParentesis 291
+	#define CerrarRegistroPadre 292
+	#define CrearCampoRegistro 293
+	#define AbrirLiteralArreglo 294
+	#define CerrarLiteralArreglo 295
+	#define AgregarLiteralArreglo 296
+	#define AgregarIdentificadorEnLista 297
 
 	/* Prototipos de las tablas */
 	extern const int TablaParsing[121][NO_TERMINAL_INICIAL];

@@ -8,6 +8,18 @@
 #include <vector>
 #include "../../lexer/token.h"
 #include "arbolExpresion.h"
+#include "../simbolos/tipos/TablaSimbolosTipos.h"
+#include "../simbolos/variables/TablaSimbolosVariables.h"
+
+
+#define TIPO_PRIMARIA 1
+#define TIPO_BINARIA 2
+#define TIPO_UNARIA 3
+
+#define TIPO_REFERENCIA_MEMORIA 1
+#define TIPO_REFERENCIA_CPLEJA 2
+#define TIPO_VALOR 3
+#define TIPO_INEXISTENTE 4
 
 class ArbolExpresion;
 
@@ -28,63 +40,129 @@ class OperadorPosfijoExpresion;
 class OperadorPosfijoExpresionDoble;
 
 class ArbolExpresion {
-    Expresion *Raiz;
-/*
+
 public:
-    void insertarToken(token *token, int precedencia, int tipo);
-    void insertarToken(nodoExpresion *nuevoNodo);
-    void insertarToken(nodoExpresion *nuevoRaiz, nodoExpresion *nuevoNodo);
+
+    TablaSimbolosTipos *tablaTipos;
+    TablaSimbolosVariables *tablaVariables;
+
+    Expresion *raiz;
+
+    void insertarExpresion(Expresion *nuevaExpresion);
+
+    void insertarExpresion(Expresion *nuevaRaiz, Expresion *nuevaExpresion);
+
     void actualizarComoParentesis();
-    void evaluate();
-*/
+
+    ArbolExpresion(TablaSimbolosTipos *tablaTipos, TablaSimbolosVariables *tablaVariables);
+
+    void evaluar();
 };
 
 class Expresion {
-    //void evaluate();
+
+public:
+    int tipo;
+    int precedencia;
+    bool soyTransformista;
+    TablaSimbolosTipos *tablaTipos;
+    TablaSimbolosVariables *tablaVariables;
+
+    virtual void insertar(Expresion *expresion);
+
+    virtual bool getTienePrimaria();
+
+    virtual void evaluate();
+
+    virtual void validarAsignacion();
 };
 
 class ExpresionBinaria : public Expresion {
+public:
+    token *termino;
+    Expresion *izquierda;
+    Expresion *derecha;
 
+    ExpresionBinaria(token *termino, int precedencia);
+
+    void evaluate();
+
+    void validarAsignacion();
 };
 
 class ExpresionUnaria : public Expresion {
+    bool tienePrimaria;
 
+public:
+
+    token *termino;
+
+    Expresion *siguiente;
+
+    ExpresionUnaria(token *termino, int precedencia);
+
+    void insertar(Expresion *expresion);
+
+    bool getTienePrimaria();
+
+    void evaluate();
 };
 
 class ExpresionPrimaria : public Expresion {
-private:
-    token *termino;
-    std::vector<OperadorPosfijo *> operadoresPosfijos;
 
 public:
+
+    token *termino;
+
+    std::vector<OperadorPosfijo *> operadoresPosfijos;
+
     ExpresionPrimaria();
 
-    ExpresionPrimaria(token *termino);
+    ExpresionPrimaria(token *termino, int precedencia);
 
     void AgregarOperadorPosfijo(OperadorPosfijo *operador);
+
+    void validarAsignacion();
+
+    void evaluate();
+
+private:
+    void validarPosfijos(SimboloTipoRegistro *tipoRegistro);
+
 };
 
 
 class OperadorPosfijo {
 public:
+    token *operador;
     int tipo;
 };
 
+//Sirve para acceder registro
 class OperadorPosfijoSimple : public OperadorPosfijo {
-    token *termino;
+
 public:
+    token *termino;
+
     OperadorPosfijoSimple();
 
-    OperadorPosfijoSimple(int tipo);
+    OperadorPosfijoSimple(int tipo, token *operador);
 
     void insertartTermino(token *termino);
 };
 
-class OperadorPosfijoExpresion {
-    //arbolExpresion expresion;
+//sirve para acceder arreglos, para acceder strings y buscar en string
+class OperadorPosfijoExpresion : public OperadorPosfijo {
+public:
+    ArbolExpresion *expresion;
+
+    OperadorPosfijoExpresion();
+
+    OperadorPosfijoExpresion(int tipo, token *operador);
 };
 
-class OperadorPosfijoExpresionDoble {
+//sirve para cortar y recortar
+class OperadorPosfijoExpresionDoble : public OperadorPosfijo {
     //arbolExpresion expresionInicial;
     //arbolExpresion expresionFinal;
 };
