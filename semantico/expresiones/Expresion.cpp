@@ -4,6 +4,7 @@
 
 #include "Expresion.h"
 #include "../../gramaticas/familiasTerminales.h"
+#include "../../gramaticas/Gramatica.h"
 
 /*******************
  * Arbol Expresion *
@@ -113,10 +114,14 @@ void ExpresionBinaria::validarAsignacion() {
     if (NIVEL16_OPERADOR_ASIGNACION_SIMPLE <= termino->codigoFamilia &&
         termino->codigoFamilia <= NIVEL16_OPERADOR_ASIGNACION_CONCATENAR) {
         if (derecha->tipo != TIPO_PRIMARIA) {
-            std::cout << "Error semantico, el elemento debe ser una referencia a memoria para ser asignado"
+            std::cout << "Error semantico, el elemento izquierdo debe ser una referencia a memoria para ser asignado"
                       << ". En linea: " << termino->fila << " ,columna: " << termino->columnaInicio << std::endl;
         } else {
             derecha->validarAsignacion();
+        }
+        if (izquierda->tipo != TIPO_PRIMARIA) {
+            std::cout << "Error semantico, el elemento izquierdo debe ser una referencia a memoria para ser asignado"
+                      << ". En linea: " << termino->fila << " ,columna: " << termino->columnaInicio << std::endl;
         }
         izquierda->validarAsignacion();
     }
@@ -255,8 +260,9 @@ void ExpresionPrimaria::validarAsignacion() {
                 // Si es registro valide posfijos
                 if (st->soyRegistro()) {
                     if (operadoresPosfijos.empty()) {
-                        std::cout << "Soy un registro, no soy valido para ser asignado"
-                                  << std::endl; //todo tambien para incremento decremento
+                        std::cout << "El elemento no es una referencia a memoria, no es valido para"
+                                  << " ser asignado o modificado" << " En linea: "
+                                  << termino->fila << ", columna: " << termino->columnaInicio << std::endl;
                     } else {
                         SimboloTipoRegistro *str = static_cast<SimboloTipoRegistro *>(st);
                         validarPosfijos(str);

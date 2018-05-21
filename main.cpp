@@ -8,7 +8,6 @@
 #include "gramaticas/GTablaFollows.h"
 #include "gramaticas/nombresTerminales.h"
 #include "semantico/erroresSemanticos.h"
-#include "semantico/expresiones/arbolExpresion.h"
 #include "semantico/expresiones/Expresion.h"
 #include "semantico/simbolos/tipos/TablaSimbolosTipos.h"
 #include "semantico/simbolos/variables/TablaSimbolosVariables.h"
@@ -963,7 +962,7 @@ int main(int argc, char *argv[]) {
                         bool X = PilaNakhaan->top();
                         //PilaNakhaan->pop();
                         if (X)
-                            cout << "Más de un default en switch "
+                            cout << "Mas de un default en switch "
                                  << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
                                  << " columnaFin: "
                                  << TA->columnaFin << '\n';
