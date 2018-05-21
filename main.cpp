@@ -823,6 +823,7 @@ int main(int argc, char *argv[]) {
                 }
                 case IniciarRegistroPadre: {
                     if (TA->codigoFamilia == 8) {
+                        banderaCompleto = false;
                         primerRegistro = true;
                         SimboloTipo *simboloTipo = tablaTipos->buscar(strReg);
                         SimboloTipoRegistro *str = static_cast<SimboloTipoRegistro *> (simboloTipo);
@@ -864,13 +865,16 @@ int main(int argc, char *argv[]) {
                                 break;
                             }
                             break;
+                        } else {
+                            break;
                         }
                         break;
                     } else {
                         cout << "Muchos argumentos de inicializacion al registro"
                              << " en linea: " << TA->fila << '\n';
+                        break;
                     }
-
+                    break;
                 }
 
                 case IniciarIndiceReg: {
@@ -893,9 +897,10 @@ int main(int argc, char *argv[]) {
                     break;
                 }
                 case TerminarIndiceReg: {
-                    stackST->pop();
                     if (stackST->empty()) {
                         banderaCompleto = true;
+                    } else {
+                        stackST->pop();
                     }
                     break;
                 }
