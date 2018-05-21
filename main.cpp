@@ -185,12 +185,12 @@ int main(int argc, char *argv[]) {
                 }
                 case ValidarExistenciaIdentificadorTipo:
                     if (tablaTipos->buscar(TA->lexema)) {
-                        cout << "Error semantico, el identificador utilizado para la variable,"
+                        cout << "Error semantico, el identificador utilizado para el tipo,"
                              << " ya fue definido previamente. En linea: "
                              << TA->fila << ", columna: " << TA->columnaInicio << endl;
                         bloquearIdentificador = true;
                     } else if (tablaVariables->buscar(TA->lexema)) {
-                        cout << "Error semantico, el identificador utilizado para la variable,"
+                        cout << "Error semantico, el identificador utilizado para el tipo,"
                              << " ya fue definido previamente como una constante. En linea: "
                              << TA->fila << ", columna: " << TA->columnaInicio << endl;
                         bloquearIdentificador = true;
@@ -267,12 +267,14 @@ int main(int argc, char *argv[]) {
                         if (tablaTipos->buscar(colaIdentificadores.at(i)->lexema)) {
                             cout << "Error semantico, el identificador utilizado,"
                                  << " ya fue definido previamente. En linea: "
-                                 << TA->fila << ", columna: " << TA->columnaInicio << endl;
+                                 << colaIdentificadores.at(i)->fila << ", columna: "
+                                 << colaIdentificadores.at(i)->columnaInicio << endl;
                             break;
                         } else if (tablaVariables->buscar(colaIdentificadores.at(i)->lexema)) {
                             cout << "Error semantico, el identificador utilizado,"
                                  << " ya fue definido previamente como variable o constante. En linea: "
-                                 << TA->fila << ", columna: " << TA->columnaInicio << endl;
+                                 << colaIdentificadores.at(i)->fila << ", columna: "
+                                 << colaIdentificadores.at(i)->columnaInicio << endl;
                         }
                         colaIdentificadoresTemporal.push_back(colaIdentificadores.at(i));
                     }
@@ -711,7 +713,7 @@ int main(int argc, char *argv[]) {
                         for (int i = 0; i < colaIdentificadores.size(); i++) {
                             if (tablaTiposTemporal->buscar(colaIdentificadores.at(i)->lexema)) {
                                 std::cout << "Error semantico, el identificador ya fue declarado dentro de este "
-                                          << "registro accedido mediante ->. En linea: "
+                                          << "registro. En linea: "
                                           << colaIdentificadores.at(i)->fila << " ,columna: "
                                           << colaIdentificadores.at(i)->columnaInicio
                                           << std::endl;
