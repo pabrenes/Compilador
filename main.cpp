@@ -160,7 +160,9 @@ int main(int argc, char *argv[]) {
             switch (EAP) {
                 case ValidarExistenciaIdentificadorConstante: {
                     if (tablaVariables->buscar(TA->lexema)) {
-                        cout << "duplicao perro" << endl; //todo
+                        cout << "Error semantico, el identificador utilizado para la constante,"
+                             << " ya fue definido previamente. En linea: "
+                             << TA->fila << ", columna: " << TA->columnaInicio << endl;
                         bloquearIdentificador = true;
                     } else
                         bloquearIdentificador = false;
@@ -183,10 +185,14 @@ int main(int argc, char *argv[]) {
                 }
                 case ValidarExistenciaIdentificadorTipo:
                     if (tablaTipos->buscar(TA->lexema)) {
-                        cout << "Duplicado perro" << endl; //todo
+                        cout << "Error semantico, el identificador utilizado para la variable,"
+                             << " ya fue definido previamente. En linea: "
+                             << TA->fila << ", columna: " << TA->columnaInicio << endl;
                         bloquearIdentificador = true;
                     } else if (tablaVariables->buscar(TA->lexema)) {
-                        cout << "fue previamente como constante perro" << endl; //todo
+                        cout << "Error semantico, el identificador utilizado para la variable,"
+                             << " ya fue definido previamente como una constante. En linea: "
+                             << TA->fila << ", columna: " << TA->columnaInicio << endl;
                         bloquearIdentificador = true;
                     } else
                         bloquearIdentificador = false;
@@ -243,8 +249,9 @@ int main(int argc, char *argv[]) {
                                                                   TIPO_CLASE_REFERENCIA_ARREGLO));
                                 }
                             } else {
-                                cout << "eso no existe perro" << endl; //todo
-                                //todo buscarlo en las otras tablas para un mejor rerporte de error
+                                cout << "Error semantico, el identificador utilizado para la declaración de un "
+                                     << "nuevo tipo, no fue declarado como un tipo previamente. En linea: "
+                                     << TA->fila << ", columna: " << TA->columnaInicio << endl;
                             }
                         }
                     }
@@ -258,14 +265,14 @@ int main(int argc, char *argv[]) {
                     vector<token *> colaIdentificadoresTemporal;
                     for (int i = 0; i < colaIdentificadores.size(); i++) {
                         if (tablaTipos->buscar(colaIdentificadores.at(i)->lexema)) {
-                            cout << "fue previamente declarao como tipo blabla" << endl; //todo
+                            cout << "Error semantico, el identificador utilizado,"
+                                 << " ya fue definido previamente. En linea: "
+                                 << TA->fila << ", columna: " << TA->columnaInicio << endl;
                             break;
                         } else if (tablaVariables->buscar(colaIdentificadores.at(i)->lexema)) {
-                            //if tipo variable
-                            cout << "fue previamente declarao como variable" << endl; //todo
-                            //if tipo constante
-                            cout << "fue previamente declarao como constante" << endl; //todo
-                            break;
+                            cout << "Error semantico, el identificador utilizado,"
+                                 << " ya fue definido previamente como variable o constante. En linea: "
+                                 << TA->fila << ", columna: " << TA->columnaInicio << endl;
                         }
                         colaIdentificadoresTemporal.push_back(colaIdentificadores.at(i));
                     }
@@ -286,7 +293,9 @@ int main(int argc, char *argv[]) {
                                         new SimboloVariable(identificador->lexema, tipo, TIPO_CLASE_VARIABLE));
                             }
                         } else {
-                            cout << "esa verga no estaba declarada perro" << endl; //todo
+                            cout << "Error semantico, el tipo de dato definido al que se quiere refrenciar,"
+                                 << " no fue definido previamente. En linea: "
+                                 << TA->fila << ", columna: " << TA->columnaInicio << endl;
                         }
                     } else if (MARILAT == TA->codigoFamilia) {
                         // Si se declara un registro donde van las variables
@@ -798,8 +807,9 @@ int main(int argc, char *argv[]) {
                                     // todo
                                 }
                             } else {
-                                cout << "eso no existe perro" << endl; //todo
-                                //todo buscarlo en las otras tablas para un mejor rerporte de error la de constantes
+                                cout << "Error semantico, el tipo definido por el usuario referenciado,"
+                                     << " no fue definido previamente. En linea: "
+                                     << TA->fila << ", columna: " << TA->columnaInicio << endl;
                             }
                         }
                     }
@@ -930,7 +940,9 @@ int main(int argc, char *argv[]) {
                             string lexema = i->lexema;
                             transform(lexema.begin(), lexema.end(), lexema.begin(), ::tolower);
                             if (lexema == identificador) {
-                                cout << "duplicado perro" << endl; //todo
+                                cout << "Error semantico, el identificador deseado ya fue declarado en esta misma,"
+                                     << " lista de identificadores. En linea: "
+                                     << TA->fila << ", columna: " << TA->columnaInicio << endl;
                                 ignorarIdentificador = true;
                                 break;
                             }

@@ -55,7 +55,7 @@ void SimboloTipoRegistro::insertarSimbolo(SimboloTipo *simbolo) {
     } else if (simbolo->soyRegistro()) {
         camposRegistroDesplazamiento.push_back(new CamposDesplazamiento(simbolo->identificador, this->espacio));
     } else if (simbolo->soyArreglo()) {
-        4 + 4; //todo jejeps
+        //todo jejeps
     }
 }
 
