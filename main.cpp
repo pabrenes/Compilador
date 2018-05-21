@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
     // Pila para manipular el manejo de errores gramaticales
     stack<int> PilaAuxiliar;
 
-    stack<SimboloTipo*> *stackST = new stack<SimboloTipo*>() ;
+    stack<SimboloTipo *> *stackST = new stack<SimboloTipo *>();
     // Para guardar el id de una función
     token *TF;
 
@@ -82,9 +82,9 @@ int main(int argc, char *argv[]) {
     OperadorPosfijoExpresion *operadorPosfijoExpresionTemporal = new OperadorPosfijoExpresion();
 
     // String para uso en registros
-    string strReg ;
+    string strReg;
 
-    int indiceReg = 0 ;
+    int indiceReg = 0;
     bool primerRegistro = true;
     bool registroAnidado = false;
     bool banderaCompleto = false;
@@ -516,7 +516,7 @@ int main(int argc, char *argv[]) {
                     break;
                 }
                 case GenerarExpresionInstruccion: //Inicio de una expresion
-                    while(!pilaArbolesExpresiones.empty())
+                    while (!pilaArbolesExpresiones.empty())
                         pilaArbolesExpresiones.pop();
                     pilaArbolesExpresiones.push(new ArbolExpresion(tablaTipos, tablaVariables));
                     break;
@@ -624,7 +624,8 @@ int main(int argc, char *argv[]) {
                         TA->codigoFamilia == IDENTIFICADOR) {
                         expresionPrimariaTemporal = new ExpresionPrimaria(TA, NivelExpresionPrimaria);
                         //Aquí inserto en el arbol normal, pero mantengo la referencia para agregar postfijos
-                        pilaArbolesExpresiones.top()->insertarExpresion(expresionPrimariaTemporal);
+                        if (!pilaArbolesExpresiones.empty())
+                            pilaArbolesExpresiones.top()->insertarExpresion(expresionPrimariaTemporal);
                     } else if (TA->codigoFamilia == PARENTESIS_IZQUIERDO) {
                         pilaArbolesExpresiones.push(new ArbolExpresion(tablaTipos, tablaVariables));
                         break;
@@ -804,8 +805,7 @@ int main(int argc, char *argv[]) {
                     }
                     break;
                 }
-                case IniciarRegistroPadre:
-                {
+                case IniciarRegistroPadre: {
                     if (TA->codigoFamilia == 8) {
                         primerRegistro = true;
                         SimboloTipo *simboloTipo = tablaTipos->buscar(strReg);
@@ -819,70 +819,67 @@ int main(int argc, char *argv[]) {
                         break;
                     }
                 }
-                case RevisarLitRegistro:
-                {
+                case RevisarLitRegistro: {
                     //TTemp = colaIdentificadores.back();
 
-                    if (TA->codigoFamilia == 8){
+                    if (TA->codigoFamilia == 8) {
                         break;
                     }
-                    if (TA->codigoFamilia == 9){
+                    if (TA->codigoFamilia == 9) {
                         break;
                     }
-                    if(banderaCompleto){
+                    if (banderaCompleto) {
                         cout << "Muchos argumentos de inicializacion al registro"
                              << " en linea: " << TA->fila << '\n';
                         break;
                     }
-                        if (!stackST->empty()) {
-                            SimboloTipo *simboloTipo = stackST->top();
-                            stackST->pop();
-                            SimboloTipoSimple *sts = static_cast<SimboloTipoSimple *> (simboloTipo);
-                            if (1 <= TA->codigoFamilia && TA->codigoFamilia <= 5) {
-                                strReg = sts->identificador;
-                                if (sts->tipoBase != mapearTipo(TA->codigoFamilia)) {
-                                    cout << "Se debe inicializar con literal "
-                                         << sts->tipoBase
-                                         << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
-                                         << " columnaFin: "
-                                         << TA->columnaFin << '\n';
-                                    break;
-                                }
+                    if (!stackST->empty()) {
+                        SimboloTipo *simboloTipo = stackST->top();
+                        stackST->pop();
+                        SimboloTipoSimple *sts = static_cast<SimboloTipoSimple *> (simboloTipo);
+                        if (1 <= TA->codigoFamilia && TA->codigoFamilia <= 5) {
+                            strReg = sts->identificador;
+                            if (sts->tipoBase != mapearTipo(TA->codigoFamilia)) {
+                                cout << "Se debe inicializar con literal "
+                                     << sts->tipoBase
+                                     << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
+                                     << " columnaFin: "
+                                     << TA->columnaFin << '\n';
                                 break;
                             }
                             break;
-                        } else {
-                            cout << "Muchos argumentos de inicializacion al registro"
-                                 << " en linea: " << TA->fila << '\n';
                         }
+                        break;
+                    } else {
+                        cout << "Muchos argumentos de inicializacion al registro"
+                             << " en linea: " << TA->fila << '\n';
+                    }
 
                 }
 
-                case IniciarIndiceReg:
-                {
-                    if (primerRegistro){
+                case IniciarIndiceReg: {
+                    if (primerRegistro) {
                         primerRegistro = false;
                         break;
                     } else {
                         SimboloTipo *simboloTipo = stackST->top();
                         SimboloTipoRegistro *str = static_cast<SimboloTipoRegistro *> (simboloTipo);
 
-                        for (int i = str->camposRegistroDesplazamiento.size() - 1  ; i >= 0  ; i-- ) {
+                        for (int i = str->camposRegistroDesplazamiento.size() - 1; i >= 0; i--) {
                             SimboloTipo *st0 = str->camposRegistro->buscar(
                                     str->camposRegistroDesplazamiento.at(i)->identiificador);
                             stackST->push(st0);
                         }
-                        registroAnidado = true ;
+                        registroAnidado = true;
                         break;
 
                     }
                     break;
                 }
-                case TerminarIndiceReg:
-                {
+                case TerminarIndiceReg: {
                     stackST->pop();
-                    if(stackST->empty()){
-                        banderaCompleto = true ;
+                    if (stackST->empty()) {
+                        banderaCompleto = true;
                     }
                     break;
                 }
@@ -1071,7 +1068,8 @@ int main(int argc, char *argv[]) {
                 }
 
                 case EvaluarExpresion: {
-                    if (TA->codigoFamilia == TERMINADOR) {
+                    if (TA->codigoFamilia == TERMINADOR || TA->codigoFamilia == HA || TA->codigoFamilia == TAT ||
+                        TA->codigoFamilia == EMRALAT || TA->codigoFamilia == AKKO) {
                         if (!pilaArbolesExpresiones.empty())
                             pilaArbolesExpresiones.top()->evaluar();
                     }

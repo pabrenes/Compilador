@@ -34,9 +34,9 @@
 #define 21
 */
 #define HA 22
+#define EMRALAT 23
+#define AKKO 24
 /*
-#define 23
-#define 24
 #define 25
 */
 #define YARAT 26
@@ -49,8 +49,8 @@
 #define 30
 #define 31
 #define 32
-#define 33
 */
+#define TAT 33
 #define ASSOKH 34
 #define THIKH 35
 /*
