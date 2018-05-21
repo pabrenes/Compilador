@@ -41,6 +41,7 @@ int main(int argc, char *argv[]) {
     // Pila para manipular el manejo de errores gramaticales
     stack<int> PilaAuxiliar;
 
+    stack<SimboloTipo*> *stackST = new stack<SimboloTipo*>() ;
     // Determina si el identificador actual para una declaración está siendo utilizado o no, para evitar su reescritura
     bool bloquearIdentificador = false;
     // Almacena el identificador actual
@@ -66,6 +67,14 @@ int main(int argc, char *argv[]) {
     ExpresionPrimaria *expresionPrimariaTemporal = new ExpresionPrimaria();
     // Temporal para un operador posfijo simple (para los accesos de registro y string)
     OperadorPosfijoSimple *operadorPosfijoSimpleTemporal = new OperadorPosfijoSimple();
+
+    // String para uso en registros
+    string strReg ;
+
+    int indiceReg = 0 ;
+    bool primerRegistro = true;
+    bool registroAnidado = false;
+    bool banderaCompleto = false;
 
     PilaParsing.push(NO_TERMINAL_INICIAL);
 
@@ -580,6 +589,7 @@ int main(int argc, char *argv[]) {
                             }
                         } else {
                             // Si ya era el último elemento en pila, inserto todos a la tabla original
+                            strReg = registroEnTope->back()->identificador;
                             for (auto registro : *registroEnTope) {
                                 tablaTipos->insertar(registro);
                             }
@@ -698,6 +708,89 @@ int main(int argc, char *argv[]) {
                     }
                     break;
                 }
+                case IniciarRegistroPadre:
+                {
+                    if (TA->codigoFamilia == 8) {
+                        primerRegistro = true;
+                        SimboloTipo *simboloTipo = tablaTipos->buscar(strReg);
+                        SimboloTipoRegistro *str = static_cast<SimboloTipoRegistro *> (simboloTipo);
+
+                        for (int i = str->camposRegistroDesplazamiento.size() - 1; i >= 0; i--) {
+                            SimboloTipo *st0 = str->camposRegistro->buscar(
+                                    str->camposRegistroDesplazamiento.at(i)->identiificador);
+                            stackST->push(st0);
+                        }
+                        break;
+                    }
+                }
+                case RevisarLitRegistro:
+                {
+                    //TTemp = colaIdentificadores.back();
+
+                    if (TA->codigoFamilia == 8){
+                        break;
+                    }
+                    if (TA->codigoFamilia == 9){
+                        break;
+                    }
+                    if(banderaCompleto){
+                        cout << "Muchos argumentos de inicializacion al registro"
+                             << " en linea: " << TA->fila << '\n';
+                        break;
+                    }
+                        if (!stackST->empty()) {
+                            SimboloTipo *simboloTipo = stackST->top();
+                            stackST->pop();
+                            SimboloTipoSimple *sts = static_cast<SimboloTipoSimple *> (simboloTipo);
+                            if (1 <= TA->codigoFamilia && TA->codigoFamilia <= 5) {
+                                strReg = sts->identificador;
+                                if (sts->tipoBase != mapearTipo(TA->codigoFamilia)) {
+                                    cout << "Se debe inicializar con literal "
+                                         << sts->tipoBase
+                                         << " en linea: " << TA->fila << " columnaInicio: " << TA->columnaInicio
+                                         << " columnaFin: "
+                                         << TA->columnaFin << '\n';
+                                    break;
+                                }
+                                break;
+                            }
+                            break;
+                        } else {
+                            cout << "Muchos argumentos de inicializacion al registro"
+                                 << " en linea: " << TA->fila << '\n';
+                        }
+
+                }
+
+                case IniciarIndiceReg:
+                {
+                    if (primerRegistro){
+                        primerRegistro = false;
+                        break;
+                    } else {
+                        SimboloTipo *simboloTipo = stackST->top();
+                        SimboloTipoRegistro *str = static_cast<SimboloTipoRegistro *> (simboloTipo);
+
+                        for (int i = str->camposRegistroDesplazamiento.size() - 1  ; i >= 0  ; i-- ) {
+                            SimboloTipo *st0 = str->camposRegistro->buscar(
+                                    str->camposRegistroDesplazamiento.at(i)->identiificador);
+                            stackST->push(st0);
+                        }
+                        registroAnidado = true ;
+                        break;
+
+                    }
+                    break;
+                }
+                case TerminarIndiceReg:
+                {
+                    stackST->pop();
+                    if(stackST->empty()){
+                        banderaCompleto = true ;
+                    }
+                    break;
+                }
+
                 case AbrirLiteralArreglo: {
                     // Si se abrió meta otra literal
                     if (TA->codigoFamilia == CORCHETE_IZQUIERDO) {

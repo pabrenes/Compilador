@@ -1,7 +1,7 @@
 /*
  * Gramatica.h
  *
- * 2018/05/19 23:46:15
+ * 2018/05/20 15:24:38
  *
  * Archivo generado por GikGram 2.0
  *
@@ -36,21 +36,25 @@
 	#define RevisarIdString 252
 	#define RevisarIdBoolean 253
 	#define RevisarIdConjunto 254
-	#define RevisarIdFraccion 255
-	#define GenerarExpresionInstruccion 256
-	#define GenerarNivel4 257
-	#define GenerarNivel3 258
-	#define GenerarNivel2 259
-	#define NivelExpresionPrimaria 260
-	#define GenerarNivelPosFijo 261
-	#define AccesoRegistroExpresion 262
-	#define CerrarExpresionParentesis 263
-	#define CerrarRegistroPadre 264
-	#define CrearCampoRegistro 265
-	#define AbrirLiteralArreglo 266
-	#define CerrarLiteralArreglo 267
-	#define AgregarLiteralArreglo 268
-	#define AgregarIdentificadorEnLista 269
+	#define IniciarRegistroPadre 255
+	#define RevisarIdFraccion 256
+	#define GenerarExpresionInstruccion 257
+	#define GenerarNivel4 258
+	#define GenerarNivel3 259
+	#define GenerarNivel2 260
+	#define NivelExpresionPrimaria 261
+	#define GenerarNivelPosFijo 262
+	#define AccesoRegistroExpresion 263
+	#define CerrarExpresionParentesis 264
+	#define CerrarRegistroPadre 265
+	#define CrearCampoRegistro 266
+	#define IniciarIndiceReg 267
+	#define TerminarIndiceReg 268
+	#define AbrirLiteralArreglo 269
+	#define CerrarLiteralArreglo 270
+	#define AgregarLiteralArreglo 271
+	#define RevisarLitRegistro 272
+	#define AgregarIdentificadorEnLista 273
 
 	/* Prototipos de las tablas */
 	extern const int TablaParsing[121][NO_TERMINAL_INICIAL];
