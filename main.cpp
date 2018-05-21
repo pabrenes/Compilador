@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
     token *TF;
 
     // Pila para los switch
-    stack<bool> *PilaNakhaan = new stack<bool> ();
+    stack<bool> *PilaNakhaan = new stack<bool>();
 
     // Variables de control semantico
     bool hayRet = false;
@@ -710,7 +710,11 @@ int main(int argc, char *argv[]) {
                         vector<token *> colaIdentificadoresTemporal;
                         for (int i = 0; i < colaIdentificadores.size(); i++) {
                             if (tablaTiposTemporal->buscar(colaIdentificadores.at(i)->lexema)) {
-                                cout << "ese campo ya se declaro en este registro perro" << endl;
+                                std::cout << "Error semantico, el identificador ya fue declarado dentro de este "
+                                          << "registro accedido mediante ->. En linea: "
+                                          << colaIdentificadores.at(i)->fila << " ,columna: "
+                                          << colaIdentificadores.at(i)->columnaInicio
+                                          << std::endl;
                                 break;
                             }
                             colaIdentificadoresTemporal.push_back(colaIdentificadores.at(i));
